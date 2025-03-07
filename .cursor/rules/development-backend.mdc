@@ -1,0 +1,111 @@
+---
+description: 后端开发习惯
+globs: 
+---
+## 后端开发习惯
+- 数据库：
+    - 使用 TypeORM 进行数据库操作
+    - 开发过程中，在创建、修改、删除数据库时，记录到 @database.md 中
+
+- API:
+    - 使用 RESTful 风格 的 api
+    - 开发过程中，在创建、修改、删除 api 时，记录到 @api.md 中
+
+- TDD 测试驱动开发：
+    - 在没有用户数据的时候进行测试，如有必要可以提供一个脚本去 seed 测试数据
+    - 注重单元测试，使用 jest 进行单元测试，单元测试写在 tests/ 目录下，命名为 {模块名}/{功能}.test.ts，比如 Auth/login.test.ts
+    - 注重 api 测试，接口使用 postman 进行测试，按模块区分放于 postman-tests/ 目录下，命名为 {功能}.postman_collection.json
+
+- 中间件：
+    - 使用中间件抽离业务逻辑，比如 error.middleware.ts / auth.middleware.ts / auth.middleware.ts
+    - 需要统一错误处理 & 参数验证
+
+## 目录结构规范
+```
+project-root/
+├── scripts/                      # 脚本目录
+├── publics/                      # 服务器静态目录
+├── src/                          # 源代码目录
+│   ├── config/                   # 配置文件目录
+│   │   └── database.ts               # 数据库配置
+│   ├── controllers/             # 控制器目录，处理请求和响应
+│   │   └── *.controller.ts
+│   ├── services/               # 服务层目录，处理业务逻辑
+│   │   └── *.service.ts
+│   ├── routes/                 # 路由目录
+│   │   └── *.routes.ts
+│   ├── models/                 # 数据模型目录
+│   │   └── *.model.ts
+│   ├── middlewares/           # 中间件目录
+│   │   ├── auth.middleware.ts
+│   │   ├── error.middleware.ts
+│   │   ├── validation.middleware.ts
+│   │   └── *.middleware.ts
+│   ├── exceptions/            # 异常处理目录
+│   │   └── *.exception.ts
+│   ├── utils/                 # 工具函数目录
+│   │   └── *.util.ts
+│   ├── scripts/              # 脚本目录（数据库种子等）
+│   │   └── *.ts
+│   ├── app.ts                # 应用入口
+│   └── server.ts             # 服务器配置
+├── tests/                    # 测试目录
+│   ├── integration/         # 集成测试
+│   │   └── *.test.ts
+│   ├── auth/               # 认证测试
+│   │   └── *.test.ts
+│   ├── database/          # 数据库测试
+│   │   └── *.test.ts
+│   └── fixtures/          # 测试数据
+│       └── *.fixture.ts
+├── postman-tests/         # Postman 测试集合
+├── ├── *.postman_environment.json # Postman 环境变量
+│   └── *.postman_collection.json # 某模块的 API 测试集合，如认证模块 auth.postman_collection.json
+├── docs/                  # 文档目录
+│   ├── api.md            # API 文档
+│   ├── database.md       # 数据库文档
+│   └── *.md              # 其他文档
+├── .env                  # 环境变量
+├── .env.example         # 环境变量示例
+├── .gitignore          # Git 忽略文件
+├── package.json        # 项目依赖配置
+├── tsconfig.json       # TypeScript 配置
+├── jest.config.js      # Jest 测试配置
+├── nodemon.json        # Nodemon 配置
+└── README.md           # 项目说明文档
+```
+
+
+
+## 文件命名规范
+- 所有文件名使用小写字母，单词之间用连字符（-）连接
+- 文件扩展名统一使用 `.ts`
+- 按照文件类型添加对应后缀：
+  - 控制器：`*.controller.ts`
+  - 服务：`*.service.ts`
+  - 路由：`*.routes.ts`
+  - 模型：`*.model.ts`
+  - 中间件：`*.middleware.ts`
+  - 工具类：`*.util.ts`
+  - 异常类：`*.exception.ts`
+  - 测试文件：`*.test.ts`
+  - 测试数据：`*.fixture.ts`
+
+## 文件内容规范
+- 每个文件应该只包含一个主要的类/功能
+- 文件顶部需要包含必要的导入语句
+- 类名使用 PascalCase 命名法
+- 接口名前缀使用 "I"，如 `IUserService`
+- 导出的函数使用 camelCase 命名法
+- 常量使用全大写，单词间用下划线连接
+- 所有公共方法和属性都要有 JSDoc 注释
+
+## 技术文档
+- [Express.js 官方文档](mdc:https:/expressjs.com)
+- [TypeScript 官方文档](mdc:https:/www.typescriptlang.org/docs)
+- [MySQL 官方文档](mdc:https:/dev.mysql.com/doc)
+
+## 学习资源
+- [Node.js Best Practices](mdc:https:/github.com/goldbergyoni/nodebestpractices)
+- [TypeScript Deep Dive](mdc:https:/basarat.gitbook.io/typescript)
+- [Express.js Security Best Practices](mdc:https:/expressjs.com/en/advanced/best-practice-security.html)

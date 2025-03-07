@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+      "postmcp": {
+        "command": "ts-node-dev",
+        "args": ["~/Documents/PostMCP/dist/index.js"]
+      }
+    }
+  }

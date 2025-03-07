@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: askbudda_backend
+    restart: always
+    env_file:
+      - .env.docker
+    ports:
+      - 4000:4000
+    volumes:
+      - ./:/app # 挂载项目根目录
+      - askbudda_backend_node_modules_data:/app/node_modules # 挂载 node_modules 卷，避免每次重新构建时覆盖主机的 node_modules
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app_network
+    command: >
+      yarn dev
+
+  mysql:
+    image: mysql:8.0
+    container_name: askbudda_mysql
+    restart: always
+    env_file:
+      - .env.docker
+    ports:
+      - 3307:3306 # 相同的网络（Docker 内），访问 3306；宿主访问 3307
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./migrations:/docker-entrypoint-initdb.d
+    networks:
+      - app_network
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql_data:
+    driver: local
+  askbudda_backend_node_modules_data:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge 

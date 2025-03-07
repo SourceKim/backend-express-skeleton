@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskBudda 静态资源</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .resource-list {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .resource-item {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AskBudda 静态资源目录</h1>
+    <div class="resource-list">
+        <div class="resource-item">
+            <h3>公共资源</h3>
+            <p>访问路径：/public/*</p>
+            <p>用途：存放公共静态资源</p>
+        </div>
+        <div class="resource-item">
+            <h3>上传文件</h3>
+            <p>访问路径：/uploads/*</p>
+            <p>用途：存放用户上传的文件</p>
+        </div>
+        <div class="resource-item">
+            <h3>佛像图片</h3>
+            <p>访问路径：/images/buddha/*</p>
+            <p>用途：存放佛像相关图片</p>
+        </div>
+        <div class="resource-item">
+            <h3>冥想音频</h3>
+            <p>访问路径：/audio/meditation/*</p>
+            <p>用途：存放冥想课程音频</p>
+        </div>
+    </div>
+</body>
+</html> 
