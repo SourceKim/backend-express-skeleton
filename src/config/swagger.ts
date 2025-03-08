@@ -3,16 +3,16 @@ import swaggerJSDoc from 'swagger-jsdoc';
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'Ask Budda API',
+    title: 'projectname API',
     version: '1.0.0',
-    description: '佛学 + AI 聊天应用的 API 文档',
+    description: 'projectname 的 API 文档',
     license: {
       name: 'MIT',
       url: 'https://opensource.org/licenses/MIT',
     },
     contact: {
       name: 'API Support',
-      email: 'support@askbudda.com',
+      email: 'support@xxx.com',
     },
   },
   servers: [

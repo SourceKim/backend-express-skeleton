@@ -4,11 +4,7 @@ import { ApiResponse } from '@/dtos/common.dto';
 import { 
     CreatePermissionDto,
     UpdatePermissionDto,
-    CreateRoleDto,
-    UpdateRoleDto,
-    PermissionResponseDto,
-    RoleResponseDto,
-    UserRolesResponseDto
+    PermissionResponseDto
 } from '@/dtos/permission.dto';
 import { HttpException } from '@/exceptions/http.exception';
 
@@ -54,10 +50,18 @@ export class PermissionController {
         res: Response<ApiResponse<PermissionResponseDto>>
     ): Promise<void> => {
         try {
-            const permission = await this.permissionService.findPermissionById(req.params.id);
+            const { id } = req.params;
+            const permission = await this.permissionService.findPermissionById(id);
+            
             if (!permission) {
-                throw new HttpException(404, '权限不存在');
+                res.status(404).json({
+                    code: 404,
+                    message: '权限不存在',
+                    data: undefined
+                });
+                return;
             }
+            
             res.json({
                 code: 0,
                 message: 'success',
@@ -86,10 +90,11 @@ export class PermissionController {
         res: Response<ApiResponse<PermissionResponseDto>>
     ): Promise<void> => {
         try {
-            const permission = await this.permissionService.createPermission(req.body);
-            res.json({
+            const permissionData = req.body;
+            const permission = await this.permissionService.createPermission(permissionData);
+            res.status(201).json({
                 code: 0,
-                message: 'success',
+                message: '权限创建成功',
                 data: permission
             });
         } catch (error) {
@@ -115,13 +120,22 @@ export class PermissionController {
         res: Response<ApiResponse<PermissionResponseDto>>
     ): Promise<void> => {
         try {
-            const permission = await this.permissionService.updatePermission(req.params.id, req.body);
+            const { id } = req.params;
+            const permissionData = req.body;
+            const permission = await this.permissionService.updatePermission(id, permissionData);
+            
             if (!permission) {
-                throw new HttpException(404, '权限不存在');
+                res.status(404).json({
+                    code: 404,
+                    message: '权限不存在',
+                    data: undefined
+                });
+                return;
             }
+            
             res.json({
                 code: 0,
-                message: 'success',
+                message: '权限更新成功',
                 data: permission
             });
         } catch (error) {
@@ -147,10 +161,11 @@ export class PermissionController {
         res: Response<ApiResponse<void>>
     ): Promise<void> => {
         try {
-            await this.permissionService.deletePermission(req.params.id);
+            const { id } = req.params;
+            await this.permissionService.deletePermission(id);
             res.json({
                 code: 0,
-                message: 'success',
+                message: '权限删除成功',
                 data: undefined
             });
         } catch (error) {
@@ -164,224 +179,6 @@ export class PermissionController {
                 res.status(500).json({
                     code: 500,
                     message: '删除权限失败',
-                    error
-                });
-            }
-        }
-    }
-
-    // 获取所有角色
-    public findAllRoles = async (
-        req: Request, 
-        res: Response<ApiResponse<RoleResponseDto[]>>
-    ): Promise<void> => {
-        try {
-            const roles = await this.permissionService.findAllRoles();
-            res.json({
-                code: 0,
-                message: 'success',
-                data: roles
-            });
-        } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '获取角色列表失败',
-                    error
-                });
-            }
-        }
-    }
-
-    // 根据ID获取角色
-    public findRoleById = async (
-        req: Request, 
-        res: Response<ApiResponse<RoleResponseDto>>
-    ): Promise<void> => {
-        try {
-            const role = await this.permissionService.findRoleById(req.params.id);
-            if (!role) {
-                throw new HttpException(404, '角色不存在');
-            }
-            res.json({
-                code: 0,
-                message: 'success',
-                data: role
-            });
-        } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '获取角色详情失败',
-                    error
-                });
-            }
-        }
-    }
-
-    // 创建角色
-    public createRole = async (
-        req: Request<{}, ApiResponse<RoleResponseDto>, CreateRoleDto>, 
-        res: Response<ApiResponse<RoleResponseDto>>
-    ): Promise<void> => {
-        try {
-            const role = await this.permissionService.createRole(req.body);
-            res.json({
-                code: 0,
-                message: 'success',
-                data: role
-            });
-        } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '创建角色失败',
-                    error
-                });
-            }
-        }
-    }
-
-    // 更新角色
-    public updateRole = async (
-        req: Request<{ id: string }, ApiResponse<RoleResponseDto>, UpdateRoleDto>, 
-        res: Response<ApiResponse<RoleResponseDto>>
-    ): Promise<void> => {
-        try {
-            const role = await this.permissionService.updateRole(req.params.id, req.body);
-            if (!role) {
-                throw new HttpException(404, '角色不存在');
-            }
-            res.json({
-                code: 0,
-                message: 'success',
-                data: role
-            });
-        } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '更新角色失败',
-                    error
-                });
-            }
-        }
-    }
-
-    // 删除角色
-    public deleteRole = async (
-        req: Request, 
-        res: Response<ApiResponse<void>>
-    ): Promise<void> => {
-        try {
-            await this.permissionService.deleteRole(req.params.id);
-            res.json({
-                code: 0,
-                message: 'success',
-                data: undefined
-            });
-        } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '删除角色失败',
-                    error
-                });
-            }
-        }
-    }
-
-    // 为角色分配权限
-    public assignPermissionsToRole = async (
-        req: Request<{ roleId: string }>, 
-        res: Response<ApiResponse<RoleResponseDto>>
-    ): Promise<void> => {
-        try {
-            const role = await this.permissionService.assignPermissionsToRole(
-                req.params.roleId,
-                req.body.permissionIds
-            );
-            if (!role) {
-                throw new HttpException(404, '角色不存在');
-            }
-            res.json({
-                code: 0,
-                message: 'success',
-                data: role
-            });
-        } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '分配权限失败',
-                    error
-                });
-            }
-        }
-    }
-
-    // 为用户分配角色
-    public assignRolesToUser = async (
-        req: Request<{ userId: string }>, 
-        res: Response<ApiResponse<UserRolesResponseDto>>
-    ): Promise<void> => {
-        try {
-            const result = await this.permissionService.assignRolesToUser(
-                req.params.userId,
-                { roles: req.body.roles }
-            );
-            res.json({
-                code: 0,
-                message: 'success',
-                data: result
-            });
-        } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '分配角色失败',
                     error
                 });
             }

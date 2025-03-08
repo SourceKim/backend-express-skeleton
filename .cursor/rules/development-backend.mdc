@@ -1,6 +1,7 @@
 ---
 description: 后端开发习惯
 globs: 
+alwaysApply: false
 ---
 ## 后端开发习惯
 - 数据库：
@@ -13,7 +14,6 @@ globs:
 
 - TDD 测试驱动开发：
     - 在没有用户数据的时候进行测试，如有必要可以提供一个脚本去 seed 测试数据
-    - 注重单元测试，使用 jest 进行单元测试，单元测试写在 tests/ 目录下，命名为 {模块名}/{功能}.test.ts，比如 Auth/login.test.ts
     - 注重 api 测试，接口使用 postman 进行测试，按模块区分放于 postman-tests/ 目录下，命名为 {功能}.postman_collection.json
 
 - 中间件：

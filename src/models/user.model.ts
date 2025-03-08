@@ -54,12 +54,6 @@ export class User {
     @Length(0, 500, { message: '简介长度不能超过500个字符' })
     bio?: string; // 用户简介
 
-    @Column({ type: 'int', default: 0 })
-    merit_points!: number; // 功德点数
-
-    @Column({ type: 'int', default: 0 })
-    meditation_minutes!: number; // 冥想时长（分钟）
-
     @Column({ type: 'boolean', default: true })
     isActive!: boolean;
 

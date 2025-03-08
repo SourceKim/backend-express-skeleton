@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -14,18 +14,12 @@ import {
 import { HttpException } from '@/exceptions/http.exception';
 import { PaginationQueryDto } from '@/dtos/common.dto';
 import { AssetType } from '@/models/asset.model';
-import * as dotenv from 'dotenv';
+import { User } from '@/models/user.model';
 
-// 加载环境变量
-dotenv.config();
-
-// 扩展 Request 类型以包含 multer 添加的 file 属性
-declare global {
-    namespace Express {
-        interface Request {
-            file?: Express.Multer.File;
-        }
-    }
+// 扩展 Express 的 Request 接口
+interface Request extends ExpressRequest {
+    user?: User;
+    file?: Express.Multer.File;
 }
 
 export class AssetController {
@@ -136,13 +130,14 @@ export class AssetController {
                 isPublicValue = req.query.is_public === 'true';
             }
             
+            // 使用类型安全的方式处理查询参数
             const query: GetAssetsQueryDto = {
                 ...pagination,
-                type: req.query.type as AssetType,
-                category: req.query.category as string,
-                keyword: req.query.keyword as string,
+                type: req.query.type ? this.validateAssetType(req.query.type.toString()) : undefined,
+                category: req.query.category ? req.query.category.toString() : undefined,
+                keyword: req.query.keyword ? req.query.keyword.toString() : undefined,
                 is_public: isPublicValue,
-                user_id: req.query.user_id as string
+                user_id: req.query.user_id ? req.query.user_id.toString() : undefined
             };
 
             // 调试日志
@@ -255,7 +250,7 @@ export class AssetController {
                 }
                 
                 // 从请求中获取用户ID（如果有）
-                const user_id = (req as any).user?.id;
+                const user_id = req.user?.id;
                 
                 // 创建资源记录
                 const assetData: CreateAssetDto = {
@@ -356,4 +351,25 @@ export class AssetController {
             }
         }
     };
+
+    // 验证资产类型是否有效
+    private validateAssetType(type: string): AssetType | undefined {
+        const validTypes = ['image', 'audio', 'video', 'document', 'other'];
+        
+        if (validTypes.includes(type)) {
+            // 使用类型守卫而不是类型断言
+            switch (type) {
+                case 'image':
+                case 'audio':
+                case 'video':
+                case 'document':
+                case 'other':
+                    return type;
+                default:
+                    return undefined;
+            }
+        }
+        
+        return undefined;
+    }
 } 

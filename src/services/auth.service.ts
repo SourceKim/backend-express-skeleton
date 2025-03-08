@@ -3,7 +3,6 @@ import { User, UserStatus } from '@/models/user.model';
 import { UserSettings } from '@/models/user-settings.model';
 import { AppDataSource } from '@/config/database';
 import { HttpException } from '@/exceptions/http.exception';
-import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { RegisterDto, LoginDto } from '@/dtos/auth.dto';
 import { logDebug, logError } from '@/utils/logger';
@@ -22,6 +21,7 @@ export class AuthService {
         this.userSettingsRepository = this.dataSource.getRepository(UserSettings);
         // 初始化 nanoid，使用数字和小写字母
         this.generateId = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 16);
+        
     }
 
     private generateUserId(): string {
@@ -63,7 +63,7 @@ export class AuthService {
             user: user,
             theme: 'light',
             language: 'zh-CN',
-            notifications: true
+            notifications_enabled: true
         });
         await this.userSettingsRepository.save(userSettings);
 
@@ -80,7 +80,7 @@ export class AuthService {
         // 使用 findOne 查找用户，包括密码字段和角色关系
         const user = await this.userRepository.findOne({
             where: { username },
-            select: ['id', 'username', 'email', 'phone', 'avatar', 'status', 'bio', 'merit_points', 'meditation_minutes', 'isActive', 'password'],
+            select: ['id', 'username', 'email', 'phone', 'avatar', 'status', 'bio', 'isActive', 'password'],
             relations: ['roles', 'roles.permissions']
         });
         
@@ -136,33 +136,11 @@ export class AuthService {
             avatar: user.avatar,
             status: user.status,
             bio: user.bio,
-            merit_points: user.merit_points,
-            meditation_minutes: user.meditation_minutes,
             isActive: user.isActive,
             roles: user.roles,  // 包含角色信息
             created_at: user.created_at,
             updated_at: user.updated_at
         };
         return sanitizedUser;
-    }
-
-    // 转换用户数据为响应格式
-    private transformUserToResponse(user: any) {
-        return {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            phone: user.phone,
-            nickname: user.nickname,
-            avatar: user.avatar,
-            bio: user.bio,
-            status: user.status,
-            merit_points: user.merit_points,
-            meditation_minutes: user.meditation_minutes,
-            isActive: user.isActive,
-            created_at: user.created_at,
-            updated_at: user.updated_at,
-            roles: user.roles || []
-        };
     }
 } 

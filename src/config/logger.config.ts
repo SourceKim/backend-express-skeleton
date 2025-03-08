@@ -20,8 +20,14 @@ const levels = {
 };
 
 // 根据环境选择日志级别
-const level = () => {
+const getLogLevel = () => {
   const env = process.env.NODE_ENV || 'development';
+  const configuredLevel = process.env.LOG_LEVEL;
+  
+  if (configuredLevel && Object.keys(levels).includes(configuredLevel)) {
+    return configuredLevel;
+  }
+  
   return env === 'development' ? 'debug' : 'info';
 };
 
@@ -91,7 +97,7 @@ const transports = [
 
 // 导出日志配置
 export const loggerConfig = {
-  level: level(),
+  level: getLogLevel(),
   levels,
   format,
   transports,

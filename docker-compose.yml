@@ -2,16 +2,14 @@ services:
   backend:
     build: 
       context: .
-      dockerfile: Dockerfile.dev
-    container_name: askbudda_backend
+      dockerfile: Dockerfile
+    container_name: projectname_backend
     restart: always
-    env_file:
-      - .env.docker
     ports:
       - 4000:4000
     volumes:
       - ./:/app # 挂载项目根目录
-      - askbudda_backend_node_modules_data:/app/node_modules # 挂载 node_modules 卷，避免每次重新构建时覆盖主机的 node_modules
+      - projectname_backend_node_modules_data:/app/node_modules # 挂载 node_modules 卷，避免每次重新构建时覆盖主机的 node_modules
     depends_on:
       mysql:
         condition: service_healthy
@@ -22,14 +20,12 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: askbudda_mysql
+    container_name: projectname_mysql
     restart: always
-    env_file:
-      - .env.docker
     ports:
       - 3307:3306 # 相同的网络（Docker 内），访问 3306；宿主访问 3307
     volumes:
-      - mysql_data:/var/lib/mysql
+      - project_name_mysql_data:/var/lib/mysql
       - ./migrations:/docker-entrypoint-initdb.d
     networks:
       - app_network
@@ -41,9 +37,9 @@ services:
       retries: 20
 
 volumes:
-  mysql_data:
+  project_name_mysql_data:
     driver: local
-  askbudda_backend_node_modules_data:
+  project_name_backend_node_modules_data:
     driver: local
 
 networks:

@@ -29,8 +29,6 @@ export class AuthController {
             avatar: user.avatar,
             bio: user.bio,
             status: user.status,
-            merit_points: user.merit_points,
-            meditation_minutes: user.meditation_minutes,
             is_active: user.isActive,
             created_at: user.created_at,
             updated_at: user.updated_at,

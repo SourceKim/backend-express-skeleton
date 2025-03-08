@@ -27,8 +27,6 @@ export interface RegisterResponseDto {
     avatar?: string;
     bio?: string;
     status: UserStatus;
-    merit_points: number;
-    meditation_minutes: number;
     is_active: boolean;
     created_at: Date;
     updated_at: Date;
@@ -51,8 +49,6 @@ export interface LoginResponseDto {
         avatar?: string;
         bio?: string;
         status: UserStatus;
-        merit_points: number;
-        meditation_minutes: number;
         is_active: boolean;
         roles: Array<{
             id: string;
@@ -72,8 +68,6 @@ export interface ProfileResponseDto {
     avatar?: string;
     bio?: string;
     status: UserStatus;
-    merit_points: number;
-    meditation_minutes: number;
     is_active: boolean;
     created_at: Date;
     updated_at: Date;

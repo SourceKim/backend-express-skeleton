@@ -81,8 +81,6 @@ export interface UserResponseDto {
     avatar?: string;
     status: UserStatus;
     bio?: string;
-    merit_points: number;
-    meditation_minutes: number;
     is_active: boolean;
     created_at: Date;
     updated_at: Date;

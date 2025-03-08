@@ -299,8 +299,6 @@
  *         - id
  *         - username
  *         - status
- *         - merit_points
- *         - meditation_minutes
  *         - is_active
  *         - created_at
  *         - updated_at
@@ -338,12 +336,6 @@
  *           type: string
  *           description: 简介
  *           nullable: true
- *         merit_points:
- *           type: number
- *           description: 功德点
- *         meditation_minutes:
- *           type: number
- *           description: 冥想时长（分钟）
  *         is_active:
  *           type: boolean
  *           description: 是否激活

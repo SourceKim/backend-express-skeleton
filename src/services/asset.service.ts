@@ -5,10 +5,6 @@ import { HttpException } from '@/exceptions/http.exception';
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
-import * as dotenv from 'dotenv';
-
-// 加载环境变量
-dotenv.config();
 
 const unlinkAsync = promisify(fs.unlink);
 

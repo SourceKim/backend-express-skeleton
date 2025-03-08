@@ -193,10 +193,6 @@
  *                           type: string
  *                         bio:
  *                           type: string
- *                         merit_points:
- *                           type: number
- *                         meditation_minutes:
- *                           type: number
  *                         status:
  *                           type: string
  *                         is_active:
@@ -363,12 +359,6 @@
  *             bio:
  *               type: string
  *               description: 简介
- *             merit_points:
- *               type: number
- *               description: 功德点
- *             meditation_minutes:
- *               type: number
- *               description: 冥想时长（分钟）
  *             status:
  *               type: string
  *               description: 状态
