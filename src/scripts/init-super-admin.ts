@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcryptjs';
 import * as mysql from 'mysql2/promise';
+import { DataSource } from 'typeorm';
 
 // 加载环境变量
 dotenv.config();
@@ -35,51 +36,80 @@ async function checkAndCreateDatabase() {
         throw new Error('数据库名称未设置，请检查环境变量 MYSQL_DATABASE');
     }
 
-    console.log('正在检查数据库是否存在...');
+    console.log(`正在检查数据库 ${database} 是否存在...`);
+    console.log(`连接信息: host=${host}, port=${port}, user=${user}, password=${password ? '已设置' : '未设置'}`);
     
-    // 创建不指定数据库的连接
-    const connection = await mysql.createConnection({
-        host,
-        port,
-        user,
-        password
-    });
-
     try {
-        // 检查数据库是否存在
-        const [rows] = await connection.query(
-            `SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`,
-            [database]
-        );
+        // 创建不指定数据库的连接
+        const connection = await mysql.createConnection({
+            host,
+            port,
+            user,
+            password,
+            // 增加连接超时设置
+            connectTimeout: 10000,
+            // 使用 127.0.0.1 而不是 localhost 可以避免一些 socket 连接问题
+            ...(host === 'localhost' ? { host: '127.0.0.1' } : {})
+        });
 
-        if (Array.isArray(rows) && rows.length === 0) {
-            console.log(`数据库 ${database} 不存在，正在创建...`);
-            await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-            console.log(`数据库 ${database} 创建成功`);
-        } else {
-            console.log(`数据库 ${database} 已存在`);
+        try {
+            // 检查数据库是否存在
+            const [rows] = await connection.query(
+                `SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`,
+                [database]
+            );
+
+            if (Array.isArray(rows) && rows.length === 0) {
+                console.log(`数据库 ${database} 不存在，正在创建...`);
+                await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+                console.log(`数据库 ${database} 创建成功`);
+            } else {
+                console.log(`数据库 ${database} 已存在`);
+            }
+        } finally {
+            await connection.end();
         }
-    } finally {
-        await connection.end();
+    } catch (error: any) {
+        console.error('数据库连接或创建失败:', error);
+        throw new Error(`无法连接到数据库服务器或创建数据库: ${error.message}`);
     }
 }
 
 async function initSuperAdmin() {
+    let customDataSource: DataSource | null = null;
+    
     try {
         // 先检查并创建数据库
         await checkAndCreateDatabase();
         
+        // 使用 127.0.0.1 替代 localhost 来避免 socket 连接问题
+        let dataSourceToUse = AppDataSource;
+        
+        if (process.env.MYSQL_HOST === 'localhost') {
+            console.log('将连接主机从 localhost 更改为 127.0.0.1 以避免 socket 连接问题');
+            
+            // 创建一个新的 DataSource，使用与 AppDataSource 相同的配置，但将 host 改为 127.0.0.1
+            customDataSource = new DataSource({
+                ...AppDataSource.options as any,
+                host: '127.0.0.1'
+            });
+            
+            dataSourceToUse = customDataSource;
+        }
+        
         // 初始化数据源连接
-        await AppDataSource.initialize();
-        console.log('数据库连接成功');
+        if (!dataSourceToUse.isInitialized) {
+            await dataSourceToUse.initialize();
+            console.log('数据库连接成功');
+        }
 
         // 运行迁移
-        await AppDataSource.runMigrations();
+        await dataSourceToUse.runMigrations();
         console.log('数据库迁移完成');
 
         // 1. 创建所有基础权限
         const permissions: Permission[] = [];
-        const permissionRepository = AppDataSource.getRepository(Permission);
+        const permissionRepository = dataSourceToUse.getRepository(Permission);
         
         for (const resource of resources) {
             for (const action of actions) {
@@ -107,7 +137,7 @@ async function initSuperAdmin() {
         console.log(`共处理 ${permissions.length} 个权限`);
 
         // 2. 创建超级管理员角色
-        const roleRepository = AppDataSource.getRepository(Role);
+        const roleRepository = dataSourceToUse.getRepository(Role);
         let role = await roleRepository.findOne({
             where: { name: 'super_admin' }
         });
@@ -127,7 +157,7 @@ async function initSuperAdmin() {
         }
 
         // 3. 创建超级管理员用户
-        const userRepository = AppDataSource.getRepository(User);
+        const userRepository = dataSourceToUse.getRepository(User);
         
         // 从环境变量获取超级管理员用户名和密码
         const adminUsername = process.env.ADMIN_USERNAME || 'super_admin';
@@ -162,10 +192,13 @@ async function initSuperAdmin() {
         console.log(`超级管理员账号：${adminUsername}`);
         console.log(`超级管理员密码：${adminPassword}`);
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('初始化失败：', error);
     } finally {
-        if (AppDataSource.isInitialized) {
+        // 关闭数据源连接
+        if (customDataSource && customDataSource.isInitialized) {
+            await customDataSource.destroy();
+        } else if (AppDataSource.isInitialized) {
             await AppDataSource.destroy();
         }
     }

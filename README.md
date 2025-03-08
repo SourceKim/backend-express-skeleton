@@ -6,6 +6,17 @@
 ## 相关文档：
 
 # 技术栈
+* 语言: TypeScript
+* 运行时: Node.js 18
+* Web框架: Express
+* 数据库: MySQL
+* ORM: TypeORM
+* 认证: JWT (JSON Web Token)
+* API文档: Swagger
+* 日志: Winston
+* 容器化: Docker, Docker Compose
+* 依赖管理: Yarn
+* 环境管理: 使用 dotenv 区分不同的环境
 
 # 功能
 - 用户功能
@@ -24,12 +35,14 @@
 
 # 开发步骤
 
+前提依赖 mysql, 可以使用 Docker 提前启动容器。
+
 ## 1. 环境变量配置
 
-复制 `.env.example` 到 `.env`
+复制 `.env.example` 到 `.env.development.local`
 
 ```
-cp .env.example .env
+cp .env.example .env.development.local
 ```
 
 编辑 & 配置环境变量
@@ -39,7 +52,6 @@ cp .env.example .env
 ```
 yarn seed:admin
 ```
-
 
 # 本地调试
 ## 开发测试
