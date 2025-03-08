@@ -327,22 +327,21 @@
  * @swagger
  * components:
  *   schemas:
- *     CreateUserDto:
+ *     User:
  *       type: object
  *       required:
+ *         - id
  *         - username
- *         - password
  *         - email
+ *         - status
+ *         - isActive
  *       properties:
+ *         id:
+ *           type: string
+ *           description: 用户ID
  *         username:
  *           type: string
  *           description: 用户名
- *           minLength: 3
- *           maxLength: 100
- *         password:
- *           type: string
- *           description: 密码
- *           minLength: 6
  *         email:
  *           type: string
  *           format: email
@@ -359,12 +358,66 @@
  *         bio:
  *           type: string
  *           description: 用户简介
- *           maxLength: 500
- *         is_active:
+ *         status:
+ *           type: string
+ *           enum: [ACTIVE, INACTIVE, BANNED]
+ *           description: 用户状态
+ *         isActive:
  *           type: boolean
  *           description: 是否激活
- *           default: true
- * 
+ *         roles:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *           description: 用户角色
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: 创建时间
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: 更新时间
+ *
+ *     CreateUserDto:
+ *       type: object
+ *       required:
+ *         - username
+ *         - password
+ *       properties:
+ *         username:
+ *           type: string
+ *           description: 用户名
+ *         password:
+ *           type: string
+ *           description: 密码
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: 邮箱
+ *         phone:
+ *           type: string
+ *           description: 手机号
+ *         nickname:
+ *           type: string
+ *           description: 昵称
+ *         avatar:
+ *           type: string
+ *           description: 头像URL
+ *         bio:
+ *           type: string
+ *           description: 用户简介
+ *         roles:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: 角色ID列表
+ *
  *     UpdateUserDto:
  *       type: object
  *       properties:
@@ -384,11 +437,19 @@
  *         bio:
  *           type: string
  *           description: 用户简介
- *           maxLength: 500
- *         is_active:
+ *         status:
+ *           type: string
+ *           enum: [ACTIVE, INACTIVE, BANNED]
+ *           description: 用户状态
+ *         roles:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: 角色ID列表
+ *         isActive:
  *           type: boolean
  *           description: 是否激活
- * 
+ *
  *     UserResponseDto:
  *       type: object
  *       properties:

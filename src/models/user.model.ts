@@ -1,7 +1,9 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, BeforeUpdate, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, BeforeUpdate, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { IsEmail, Length, IsOptional, Matches, IsEnum, MinLength } from 'class-validator';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '@/models/role.model';
+import { Order } from '@/models/order.model';
+import { Cart } from '@/models/cart.model';
 
 export enum UserStatus {
     ACTIVE = 'active',
@@ -76,6 +78,12 @@ export class User {
         }
     })
     roles!: Role[];
+
+    @OneToMany(() => Order, order => order.user)
+    orders!: Order[];
+
+    @OneToMany(() => Cart, cart => cart.user)
+    carts!: Cart[];
 
     @BeforeInsert()
     @BeforeUpdate()
