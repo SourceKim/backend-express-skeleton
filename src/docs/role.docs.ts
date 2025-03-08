@@ -1,306 +1,16 @@
 /**
  * @swagger
- * /assets:
+ * /roles:
  *   get:
  *     tags:
- *       - 静态资源
- *     summary: 获取资源列表
- *     description: 获取静态资源集合，支持分页和筛选
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: 页码
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: 每页数量
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *         description: 资源类型
- *       - in: query
- *         name: name
- *         schema:
- *           type: string
- *         description: 资源名称
- *     responses:
- *       200:
- *         description: 成功获取资源列表
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/AssetResponseDto'
- *                     total:
- *                       type: number
- *                       description: 总记录数
- *                     page:
- *                       type: number
- *                       description: 当前页码
- *                     limit:
- *                       type: number
- *                       description: 每页数量
- *                     totalPages:
- *                       type: number
- *                       description: 总页数
- *                 error:
- *                   type: object
- *                   nullable: true
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   post:
- *     tags:
- *       - 静态资源
- *     summary: 上传资源
- *     description: 上传新的静态资源文件
+ *       - 角色管理
+ *     summary: 获取角色列表
+ *     description: 获取系统中所有角色的列表
  *     security:
  *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - file
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *                 description: 要上传的文件
- *               type:
- *                 type: string
- *                 description: 资源类型
- *                 enum: [image, document, video, audio, other]
- *               name:
- *                 type: string
- *                 description: 资源名称
- *               description:
- *                 type: string
- *                 description: 资源描述
  *     responses:
  *       200:
- *         description: 资源上传成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/AssetResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       413:
- *         description: 文件太大
- *       415:
- *         description: 不支持的文件类型
- *       500:
- *         $ref: '#/components/responses/InternalError'
- */
-
-/**
- * @swagger
- * /assets/{id}:
- *   get:
- *     tags:
- *       - 静态资源
- *     summary: 获取资源详情
- *     description: 获取指定资源ID的详细信息
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 资源ID
- *     responses:
- *       200:
- *         description: 成功获取资源详情
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/AssetResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   put:
- *     tags:
- *       - 静态资源
- *     summary: 更新资源信息
- *     description: 更新指定ID的资源元数据
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 资源ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               type:
- *                 type: string
- *                 description: 资源类型
- *                 enum: [image, document, video, audio, other]
- *               name:
- *                 type: string
- *                 description: 资源名称
- *               description:
- *                 type: string
- *                 description: 资源描述
- *     responses:
- *       200:
- *         description: 资源信息更新成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/AssetResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   delete:
- *     tags:
- *       - 静态资源
- *     summary: 删除资源
- *     description: 删除指定ID的资源
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 资源ID
- *     responses:
- *       200:
- *         description: 资源删除成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: object
- *                   nullable: true
- *                 error:
- *                   type: object
- *                   nullable: true
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- */
-
-/**
- * @swagger
- * /assets/batch:
- *   post:
- *     tags:
- *       - 静态资源
- *     summary: 批量上传资源
- *     description: 一次上传多个静态资源文件
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - files
- *             properties:
- *               files:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
- *                 description: 要上传的文件数组
- *               type:
- *                 type: string
- *                 description: 资源类型
- *                 enum: [image, document, video, audio, other]
- *     responses:
- *       200:
- *         description: 资源批量上传成功
+ *         description: 成功获取角色列表
  *         content:
  *           application/json:
  *             schema:
@@ -315,30 +25,22 @@
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/AssetResponseDto'
+ *                     $ref: '#/components/schemas/RoleResponseDto'
  *                 error:
  *                   type: object
  *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
- *       413:
- *         description: 文件太大
- *       415:
- *         description: 不支持的文件类型
+ *       403:
+ *         description: 权限不足
  *       500:
  *         $ref: '#/components/responses/InternalError'
- */
-
-/**
- * @swagger
- * /assets/batch/delete:
+ *   
  *   post:
  *     tags:
- *       - 静态资源
- *     summary: 批量删除资源
- *     description: 一次删除多个静态资源
+ *       - 角色管理
+ *     summary: 创建角色
+ *     description: 创建新的角色
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -346,18 +48,148 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - ids
- *             properties:
- *               ids:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: 要删除的资源ID数组
+ *             $ref: '#/components/schemas/CreateRoleDto'
  *     responses:
  *       200:
- *         description: 资源批量删除成功
+ *         description: 角色创建成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/RoleResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 权限不足
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @swagger
+ * /roles/{id}:
+ *   get:
+ *     tags:
+ *       - 角色管理
+ *     summary: 获取角色详情
+ *     description: 获取指定角色ID的详细信息
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 角色ID
+ *     responses:
+ *       200:
+ *         description: 成功获取角色详情
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/RoleResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 权限不足
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ *   
+ *   put:
+ *     tags:
+ *       - 角色管理
+ *     summary: 更新角色
+ *     description: 更新指定ID的角色信息
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 角色ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateRoleDto'
+ *     responses:
+ *       200:
+ *         description: 角色更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/RoleResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 权限不足
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ *   
+ *   delete:
+ *     tags:
+ *       - 角色管理
+ *     summary: 删除角色
+ *     description: 删除指定ID的角色
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 角色ID
+ *     responses:
+ *       200:
+ *         description: 角色删除成功
  *         content:
  *           application/json:
  *             schema:
@@ -371,10 +203,59 @@
  *                   example: success
  *                 data:
  *                   type: object
- *                   properties:
- *                     deleted:
- *                       type: number
- *                       description: 成功删除的数量
+ *                   nullable: true
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 权限不足
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @swagger
+ * /roles/{roleId}/permissions:
+ *   post:
+ *     tags:
+ *       - 角色管理
+ *     summary: 为角色分配权限
+ *     description: 为指定角色ID分配一组权限
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: roleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 角色ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AssignPermissionsDto'
+ *     responses:
+ *       200:
+ *         description: 权限分配成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/RoleResponseDto'
  *                 error:
  *                   type: object
  *                   nullable: true
@@ -382,6 +263,64 @@
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 权限不足
+ *       404:
+ *         description: 角色不存在
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @swagger
+ * /roles/users/{userId}/roles:
+ *   post:
+ *     tags:
+ *       - 角色管理
+ *     summary: 为用户分配角色
+ *     description: 为指定用户ID分配一组角色
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AssignRolesDto'
+ *     responses:
+ *       200:
+ *         description: 角色分配成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/UserRolesResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 权限不足
+ *       404:
+ *         description: 用户不存在
  *       500:
  *         $ref: '#/components/responses/InternalError'
  */
@@ -390,47 +329,135 @@
  * @swagger
  * components:
  *   schemas:
- *     AssetResponseDto:
+ *     CreateRoleDto:
+ *       type: object
+ *       required:
+ *         - name
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: 角色名称
+ *           minLength: 1
+ *           example: 管理员
+ *         description:
+ *           type: string
+ *           description: 角色描述
+ *           nullable: true
+ *           example: 系统管理员，拥有所有权限
+ * 
+ *     UpdateRoleDto:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: 角色名称
+ *           minLength: 1
+ *           example: 管理员
+ *         description:
+ *           type: string
+ *           description: 角色描述
+ *           nullable: true
+ *           example: 系统管理员，拥有所有权限
+ * 
+ *     AssignPermissionsDto:
+ *       type: object
+ *       required:
+ *         - permissions
+ *       properties:
+ *         permissions:
+ *           type: array
+ *           items:
+ *             type: string
+ *             format: uuid
+ *           description: 权限ID列表
+ *           example: ["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"]
+ * 
+ *     AssignRolesDto:
+ *       type: object
+ *       required:
+ *         - roles
+ *       properties:
+ *         roles:
+ *           type: array
+ *           items:
+ *             type: string
+ *             format: uuid
+ *           description: 角色ID列表
+ *           example: ["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"]
+ * 
+ *     RoleResponseDto:
  *       type: object
  *       properties:
  *         id:
  *           type: string
  *           format: uuid
- *           description: 资源ID
- *         type:
- *           type: string
- *           description: 资源类型
- *           enum: [image, document, video, audio, other]
+ *           description: 角色ID
  *         name:
  *           type: string
- *           description: 资源名称
- *         original_name:
- *           type: string
- *           description: 原始文件名
+ *           description: 角色名称
  *         description:
  *           type: string
- *           description: 资源描述
+ *           description: 角色描述
  *           nullable: true
- *         mime_type:
- *           type: string
- *           description: MIME类型
- *         size:
- *           type: number
- *           description: 文件大小(字节)
- *         path:
- *           type: string
- *           description: 存储路径
- *         url:
- *           type: string
- *           description: 访问URL
- *         created_by:
- *           type: string
- *           format: uuid
- *           description: 创建者ID
+ *         permissions:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 format: uuid
+ *               name:
+ *                 type: string
+ *               resource:
+ *                 type: string
+ *               action:
+ *                 type: string
+ *           description: 角色包含的权限列表
  *         created_at:
  *           type: string
  *           format: date-time
  *           description: 创建时间
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: 更新时间
+ * 
+ *     UserRolesResponseDto:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           description: 用户ID
+ *         username:
+ *           type: string
+ *           description: 用户名
+ *         roles:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 format: uuid
+ *               name:
+ *                 type: string
+ *               permissions:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     name:
+ *                       type: string
+ *                     resource:
+ *                       type: string
+ *                     action:
+ *                       type: string
+ *           description: 用户拥有的角色列表
  *         updated_at:
  *           type: string
  *           format: date-time

@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /api/v1/users/{userId}/settings:
+ * /users/{userId}/settings:
  *   get:
  *     summary: 获取用户设置
  *     tags: [UserSettings]
@@ -19,10 +19,10 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: 用户 ID
+ *         description: 用户ID
  *     responses:
  *       200:
- *         description: 获取成功
+ *         description: 成功获取用户设置
  *         content:
  *           application/json:
  *             schema:
@@ -33,107 +33,19 @@
  *                   example: 0
  *                 message:
  *                   type: string
- *                   example: success
+ *                   example: "success"
  *                 data:
+ *                   $ref: '#/components/schemas/UserSettings'
+ *                 error:
  *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     theme:
- *                       type: string
- *                     language:
- *                       type: string
- *                     notifications_enabled:
- *                       type: boolean
- *                     created_at:
- *                       type: string
- *                       format: date-time
- *                     updated_at:
- *                       type: string
- *                       format: date-time
+ *                   nullable: true
  *       401:
  *         description: 未授权
  *       404:
  *         description: 用户设置不存在
- */
-
-/**
- * @swagger
- * /api/v1/users/{userId}/settings:
- *   post:
- *     summary: 创建用户设置
- *     tags: [UserSettings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户 ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - theme
- *               - language
- *               - notifications_enabled
- *             properties:
- *               theme:
- *                 type: string
- *                 description: 主题
- *               language:
- *                 type: string
- *                 description: 语言
- *               notifications_enabled:
- *                 type: boolean
- *                 description: 是否启用通知
- *     responses:
- *       201:
- *         description: 创建成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: 用户设置创建成功
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     theme:
- *                       type: string
- *                     language:
- *                       type: string
- *                     notifications_enabled:
- *                       type: boolean
- *                     created_at:
- *                       type: string
- *                       format: date-time
- *                     updated_at:
- *                       type: string
- *                       format: date-time
- *       400:
- *         description: 请求参数错误
- *       401:
- *         description: 未授权
- *       404:
- *         description: 用户不存在
- */
-
-/**
- * @swagger
- * /api/v1/users/{userId}/settings:
+ *       500:
+ *         description: 服务器错误
+ *
  *   put:
  *     summary: 更新用户设置
  *     tags: [UserSettings]
@@ -145,26 +57,16 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: 用户 ID
+ *         description: 用户ID
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               theme:
- *                 type: string
- *                 description: 主题
- *               language:
- *                 type: string
- *                 description: 语言
- *               notifications_enabled:
- *                 type: boolean
- *                 description: 是否启用通知
+ *             $ref: '#/components/schemas/UpdateUserSettingsDto'
  *     responses:
  *       200:
- *         description: 更新成功
+ *         description: 成功更新用户设置
  *         content:
  *           application/json:
  *             schema:
@@ -175,37 +77,27 @@
  *                   example: 0
  *                 message:
  *                   type: string
- *                   example: 用户设置更新成功
+ *                   example: "success"
  *                 data:
+ *                   $ref: '#/components/schemas/UserSettings'
+ *                 error:
  *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     theme:
- *                       type: string
- *                     language:
- *                       type: string
- *                     notifications_enabled:
- *                       type: boolean
- *                     created_at:
- *                       type: string
- *                       format: date-time
- *                     updated_at:
- *                       type: string
- *                       format: date-time
+ *                   nullable: true
  *       400:
  *         description: 请求参数错误
  *       401:
  *         description: 未授权
  *       404:
  *         description: 用户设置不存在
+ *       500:
+ *         description: 服务器错误
  */
 
 /**
  * @swagger
- * /api/v1/users/{userId}/settings:
- *   delete:
- *     summary: 删除用户设置
+ * /users/{userId}/settings/theme:
+ *   patch:
+ *     summary: 更新用户主题设置
  *     tags: [UserSettings]
  *     security:
  *       - bearerAuth: []
@@ -215,10 +107,23 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: 用户 ID
+ *         description: 用户ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - theme
+ *             properties:
+ *               theme:
+ *                 type: string
+ *                 enum: [light, dark, system]
+ *                 description: 主题设置
  *     responses:
  *       200:
- *         description: 删除成功
+ *         description: 成功更新主题设置
  *         content:
  *           application/json:
  *             schema:
@@ -229,11 +134,126 @@
  *                   example: 0
  *                 message:
  *                   type: string
- *                   example: 用户设置删除成功
+ *                   example: "success"
  *                 data:
- *                   type: null
+ *                   $ref: '#/components/schemas/UserSettings'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         description: 请求参数错误
  *       401:
  *         description: 未授权
  *       404:
  *         description: 用户设置不存在
+ *       500:
+ *         description: 服务器错误
+ */
+
+/**
+ * @swagger
+ * /users/{userId}/settings/language:
+ *   patch:
+ *     summary: 更新用户语言设置
+ *     tags: [UserSettings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - language
+ *             properties:
+ *               language:
+ *                 type: string
+ *                 enum: [zh-CN, en-US]
+ *                 description: 语言设置
+ *     responses:
+ *       200:
+ *         description: 成功更新语言设置
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   $ref: '#/components/schemas/UserSettings'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         description: 请求参数错误
+ *       401:
+ *         description: 未授权
+ *       404:
+ *         description: 用户设置不存在
+ *       500:
+ *         description: 服务器错误
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UserSettings:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           description: 设置ID
+ *         user_id:
+ *           type: string
+ *           format: uuid
+ *           description: 用户ID
+ *         theme:
+ *           type: string
+ *           enum: [light, dark, system]
+ *           description: 主题设置
+ *         language:
+ *           type: string
+ *           enum: [zh-CN, en-US]
+ *           description: 语言设置
+ *         notifications_enabled:
+ *           type: boolean
+ *           description: 是否启用通知
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: 创建时间
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: 更新时间
+ *
+ *     UpdateUserSettingsDto:
+ *       type: object
+ *       properties:
+ *         theme:
+ *           type: string
+ *           enum: [light, dark, system]
+ *           description: 主题设置
+ *         language:
+ *           type: string
+ *           enum: [zh-CN, en-US]
+ *           description: 语言设置
+ *         notifications_enabled:
+ *           type: boolean
+ *           description: 是否启用通知
  */ 

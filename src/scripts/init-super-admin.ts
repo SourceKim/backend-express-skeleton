@@ -86,7 +86,6 @@ async function initSuperAdmin() {
         let dataSourceToUse = AppDataSource;
         
         if (process.env.MYSQL_HOST === 'localhost') {
-            console.log('将连接主机从 localhost 更改为 127.0.0.1 以避免 socket 连接问题');
             
             // 创建一个新的 DataSource，使用与 AppDataSource 相同的配置，但将 host 改为 127.0.0.1
             customDataSource = new DataSource({
@@ -169,19 +168,43 @@ async function initSuperAdmin() {
         });
 
         if (!user) {
-            // 手动加密密码，因为在脚本中可能不会触发实体的 BeforeInsert 钩子
-            const hashedPassword = await bcrypt.hash(adminPassword, 10);
+            console.log(`准备创建超级管理员用户: ${adminUsername}, 密码: ${adminPassword}`);
             
-            user = userRepository.create({
-                id: nanoid(16),
-                username: adminUsername,
-                email: adminEmail,
-                password: hashedPassword,
-                status: UserStatus.ACTIVE,
-                roles: [role]
-            });
-            await userRepository.save(user);
+            // 直接使用 SQL 插入用户记录，绕过 TypeORM 的实体钩子
+            // 手动加密密码
+            const hashedPassword = await bcrypt.hash(adminPassword, 10);
+            console.log(`密码已手动加密: ${hashedPassword.substring(0, 10)}...`);
+            
+            // 生成用户 ID
+            const userId = nanoid(16);
+            
+            // 使用原始 SQL 插入用户记录
+            await dataSourceToUse.query(
+                `INSERT INTO users (id, username, email, password, status, isActive, created_at, updated_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                [userId, adminUsername, adminEmail, hashedPassword, UserStatus.ACTIVE, true]
+            );
+            
+            // 插入用户角色关系
+            await dataSourceToUse.query(
+                `INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)`,
+                [userId, role.id]
+            );
+            
             console.log(`创建了超级管理员用户: ${adminUsername}`);
+            
+            // 从数据库中重新获取用户，以便进行密码验证测试
+            user = await userRepository.findOne({
+                where: { id: userId },
+                select: ['id', 'username', 'password']
+            });
+            
+            if (user) {
+                // 验证密码是否可以正确比较
+                const testPassword = adminPassword;
+                const isValid = await bcrypt.compare(testPassword, user.password);
+                console.log(`密码验证测试: ${isValid ? '成功' : '失败'}`);
+            }
         } else {
             user.roles = [role];
             await userRepository.save(user);

@@ -54,27 +54,35 @@
  *                   type: string
  *                   example: success
  *                 data:
- *                   allOf:
- *                     - $ref: '#/components/schemas/PaginatedResponse'
- *                     - type: object
- *                       properties:
- *                         items:
- *                           type: array
- *                           items:
- *                             $ref: '#/components/schemas/UserResponseDto'
+ *                   type: object
+ *                   properties:
+ *                     items:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/UserResponseDto'
+ *                     total:
+ *                       type: number
+ *                       description: 总记录数
+ *                     page:
+ *                       type: number
+ *                       description: 当前页码
+ *                     limit:
+ *                       type: number
+ *                       description: 每页数量
+ *                     totalPages:
+ *                       type: number
+ *                       description: 总页数
  *                 error:
  *                   type: object
  *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
  *       500:
  *         $ref: '#/components/responses/InternalError'
- * 
+ *   
  *   post:
  *     tags:
  *       - 用户
  *     summary: 创建用户
- *     description: 添加新的用户记录
+ *     description: 管理员创建新用户
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -84,7 +92,7 @@
  *           schema:
  *             $ref: '#/components/schemas/CreateUserDto'
  *     responses:
- *       201:
+ *       200:
  *         description: 用户创建成功
  *         content:
  *           application/json:
@@ -106,6 +114,10 @@
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       409:
+ *         description: 用户名或邮箱已存在
  *       500:
  *         $ref: '#/components/responses/InternalError'
  */
@@ -117,7 +129,9 @@
  *     tags:
  *       - 用户
  *     summary: 获取用户详情
- *     description: 获取指定用户的详细信息
+ *     description: 获取指定用户ID的详细信息
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -144,16 +158,20 @@
  *                 error:
  *                   type: object
  *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
  *         $ref: '#/components/responses/InternalError'
- * 
+ *   
  *   put:
  *     tags:
  *       - 用户
  *     summary: 更新用户
- *     description: 修改指定用户的信息
+ *     description: 更新指定ID的用户信息
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -192,6 +210,113 @@
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       409:
+ *         description: 用户名或邮箱已存在
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ *   
+ *   delete:
+ *     tags:
+ *       - 用户
+ *     summary: 删除用户
+ *     description: 删除指定ID的用户
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     responses:
+ *       200:
+ *         description: 用户删除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   nullable: true
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @swagger
+ * /users/{id}/status:
+ *   patch:
+ *     tags:
+ *       - 用户
+ *     summary: 更新用户状态
+ *     description: 更新指定用户的状态（激活/禁用）
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - is_active
+ *             properties:
+ *               is_active:
+ *                 type: boolean
+ *                 description: 是否激活
+ *     responses:
+ *       200:
+ *         description: 用户状态更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/UserResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -207,6 +332,7 @@
  *       required:
  *         - username
  *         - password
+ *         - email
  *       properties:
  *         username:
  *           type: string
@@ -221,34 +347,24 @@
  *           type: string
  *           format: email
  *           description: 邮箱
- *           nullable: true
- *         nickname:
- *           type: string
- *           description: 昵称
- *           minLength: 2
- *           maxLength: 100
- *           nullable: true
  *         phone:
  *           type: string
  *           description: 手机号
- *           pattern: '^1[3-9]\\d{9}$'
- *           nullable: true
+ *         nickname:
+ *           type: string
+ *           description: 昵称
  *         avatar:
  *           type: string
- *           description: 头像
- *           nullable: true
+ *           description: 头像URL
  *         bio:
  *           type: string
- *           description: 简介
+ *           description: 用户简介
  *           maxLength: 500
- *           nullable: true
- *         roles:
- *           type: array
- *           items:
- *             type: string
- *           description: 角色列表
- *           nullable: true
- *
+ *         is_active:
+ *           type: boolean
+ *           description: 是否激活
+ *           default: true
+ * 
  *     UpdateUserDto:
  *       type: object
  *       properties:
@@ -256,53 +372,25 @@
  *           type: string
  *           format: email
  *           description: 邮箱
- *           nullable: true
- *         nickname:
- *           type: string
- *           description: 昵称
- *           minLength: 2
- *           maxLength: 100
- *           nullable: true
  *         phone:
  *           type: string
  *           description: 手机号
- *           pattern: '^1[3-9]\\d{9}$'
- *           nullable: true
+ *         nickname:
+ *           type: string
+ *           description: 昵称
  *         avatar:
  *           type: string
- *           description: 头像
- *           nullable: true
+ *           description: 头像URL
  *         bio:
  *           type: string
- *           description: 简介
+ *           description: 用户简介
  *           maxLength: 500
- *           nullable: true
- *         status:
- *           type: string
- *           enum: ['ACTIVE', 'INACTIVE', 'BANNED']
- *           description: 用户状态
- *           nullable: true
  *         is_active:
  *           type: boolean
  *           description: 是否激活
- *           nullable: true
- *         roles:
- *           type: array
- *           items:
- *             type: string
- *           description: 角色列表
- *           nullable: true
- *
+ * 
  *     UserResponseDto:
  *       type: object
- *       required:
- *         - id
- *         - username
- *         - status
- *         - is_active
- *         - created_at
- *         - updated_at
- *         - roles
  *       properties:
  *         id:
  *           type: string
@@ -313,29 +401,27 @@
  *           description: 用户名
  *         email:
  *           type: string
- *           format: email
  *           description: 邮箱
+ *         phone:
+ *           type: string
+ *           description: 手机号
  *           nullable: true
  *         nickname:
  *           type: string
  *           description: 昵称
  *           nullable: true
- *         phone:
- *           type: string
- *           description: 手机号
- *           nullable: true
  *         avatar:
  *           type: string
- *           description: 头像
+ *           description: 头像URL
+ *           nullable: true
+ *         bio:
+ *           type: string
+ *           description: 用户简介
  *           nullable: true
  *         status:
  *           type: string
- *           enum: ['ACTIVE', 'INACTIVE', 'BANNED']
  *           description: 用户状态
- *         bio:
- *           type: string
- *           description: 简介
- *           nullable: true
+ *           enum: [active, inactive, locked, pending]
  *         is_active:
  *           type: boolean
  *           description: 是否激活
@@ -347,30 +433,4 @@
  *           type: string
  *           format: date-time
  *           description: 更新时间
- *         roles:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               id:
- *                 type: string
- *                 description: 角色ID
- *               name:
- *                 type: string
- *                 description: 角色名称
- *               description:
- *                 type: string
- *                 description: 角色描述
- *                 nullable: true
- *           description: 角色列表
- *
- *     UserListResponseDto:
- *       allOf:
- *         - $ref: '#/components/schemas/PaginatedResponse'
- *         - type: object
- *           properties:
- *             items:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/UserResponseDto'
  */ 

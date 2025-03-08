@@ -85,11 +85,17 @@ export class AuthService {
         });
         
         if (!user) {
+            console.log("用户不存在:", username);
             throw new HttpException(401, '用户名或密码错误');
         }
 
+        console.log(`尝试登录用户: ${username}, 输入密码: ${password}`);
+        console.log(`数据库中的密码哈希: ${user.password.substring(0, 10)}...`);
+
         // 使用实体的 comparePassword 方法验证密码
         const isValidPassword = await user.comparePassword(password);
+        console.log(`密码验证结果: ${isValidPassword ? '成功' : '失败'}`);
+        
         if (!isValidPassword) {
             throw new HttpException(401, '用户名或密码错误');
         }
