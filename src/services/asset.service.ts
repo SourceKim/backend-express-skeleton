@@ -28,6 +28,8 @@ export class AssetService {
      * @param keyword 搜索关键词
      * @param is_public 是否公开
      * @param user_id 上传用户ID
+     * @param sortBy 排序字段
+     * @param sortOrder 排序方向
      */
     public async getAssets(
         page = 1,
@@ -36,10 +38,12 @@ export class AssetService {
         category?: string,
         keyword?: string,
         is_public?: boolean,
-        user_id?: string
+        user_id?: string,
+        sortBy: string = 'created_at',
+        sortOrder: 'ASC' | 'DESC' = 'DESC'
     ) {
         // 打印输入参数进行调试
-        console.log('getAssets 输入参数:', { page, limit, type, category, keyword, is_public, user_id });
+        console.log('getAssets 输入参数:', { page, limit, type, category, keyword, is_public, user_id, sortBy, sortOrder });
         
         try {
             const queryBuilder = this.assetRepository.createQueryBuilder('asset');
@@ -87,8 +91,12 @@ export class AssetService {
                 console.log('未添加任何过滤条件，将返回所有资产');
             }
 
+            // 验证排序字段是否有效
+            const validSortFields = ['id', 'filename', 'originalname', 'size', 'type', 'category', 'is_public', 'created_at', 'updated_at'];
+            const actualSortBy = validSortFields.includes(sortBy) ? sortBy : 'created_at';
+
             const [items, total] = await queryBuilder
-                .orderBy('asset.created_at', 'DESC')
+                .orderBy(`asset.${actualSortBy}`, sortOrder)
                 .skip((page - 1) * limit)
                 .take(limit)
                 .getManyAndCount();

@@ -8,6 +8,7 @@ import assetRoutes from '@/routes/asset.routes';
 import productRoutes from '@/routes/product.routes';
 import cartRoutes from '@/routes/cart.routes';
 import orderRoutes from '@/routes/order.routes';
+import materialRoutes from '@/routes/material.routes';
 
 const router = Router();
 
@@ -26,5 +27,8 @@ router.use(`${API_VERSION}/assets`, assetRoutes);
 router.use(`${API_VERSION}/products`, productRoutes);
 router.use(`${API_VERSION}/cart`, cartRoutes);
 router.use(`${API_VERSION}/orders`, orderRoutes);
+
+// 素材管理路由
+router.use(`${API_VERSION}/materials`, materialRoutes);
 
 export default router; 

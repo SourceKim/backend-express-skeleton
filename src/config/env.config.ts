@@ -48,6 +48,12 @@ export const ENV = {
   MYSQL_USER: process.env.MYSQL_USER || 'root',
   MYSQL_PASSWORD: process.env.MYSQL_PASSWORD || '',
   MYSQL_DATABASE: process.env.MYSQL_DATABASE || 'database_name',
+  
+  // 素材管理配置
+  UPLOAD_DIR: process.env.UPLOAD_DIR || './uploads',
+  API_URL: process.env.API_URL || 'http://localhost:3000',
+  MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 默认10MB
+  ALLOWED_MIME_TYPES: process.env.ALLOWED_MIME_TYPES ? process.env.ALLOWED_MIME_TYPES.split(',') : ['image/*', 'audio/*', 'video/*', 'application/pdf', 'text/plain'],
 };
 
 if (process.env.NODE_ENV === 'development') {

@@ -144,13 +144,15 @@ export class AssetController {
             console.log('处理后的查询参数:', query);
 
             const result = await this.assetService.getAssets(
-                query.page,
-                query.limit,
+                query.page || 1,
+                query.limit || 20,
                 query.type,
                 query.category,
                 query.keyword,
                 query.is_public,
-                query.user_id
+                query.user_id,
+                query.sort_by,
+                query.sort_order
             );
             
             // 调试日志
@@ -161,10 +163,14 @@ export class AssetController {
             
             const response: PaginatedAssetsResponse = {
                 items: result.items.map(item => this.transformToDto(item)),
-                total: result.total,
-                page: query.page,
-                limit: query.limit,
-                total_pages: Math.ceil(result.total / query.limit)
+                meta: {
+                    total: result.total,
+                    page: query.page || 1,
+                    limit: query.limit || 20,
+                    pages: Math.ceil(result.total / (query.limit || 20)),
+                    sort_by: query.sort_by,
+                    sort_order: query.sort_order
+                }
             };
             
             res.json({
@@ -198,9 +204,8 @@ export class AssetController {
         } catch (error) {
             if (error instanceof HttpException) {
                 res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
+                    code: -1,
+                    message: error.message
                 });
             } else {
                 res.status(500).json({
