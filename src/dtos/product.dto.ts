@@ -2,7 +2,8 @@ import { IsString, IsNumber, IsOptional, Min, IsEnum, IsUrl } from 'class-valida
 
 enum ProductStatus {
   ACTIVE = 'active',
-  INACTIVE = 'inactive'
+  INACTIVE = 'inactive',
+  OUT_OF_STOCK = 'out_of_stock'
 }
 
 export class CreateProductDto {

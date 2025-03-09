@@ -3,15 +3,15 @@ import { IsNumber, IsString, IsNotEmpty, Min } from 'class-validator';
 import { User } from './user.model';
 import { Product } from './product.model';
 
-@Entity('carts')
+@Entity('cart_items')
 export class Cart {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @ManyToOne(() => User, user => user.carts)
   user!: User;
 
-  @Column()
+  @Column({ name: 'user_id' })
   @IsString()
   @IsNotEmpty({ message: '用户ID不能为空' })
   userId!: string;
@@ -19,10 +19,10 @@ export class Cart {
   @ManyToOne(() => Product)
   product!: Product;
 
-  @Column()
-  @IsNumber()
+  @Column({ name: 'product_id' })
+  @IsString()
   @IsNotEmpty({ message: '产品ID不能为空' })
-  productId!: number;
+  productId!: string;
 
   @Column()
   @IsNumber()

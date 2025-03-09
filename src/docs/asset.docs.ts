@@ -131,48 +131,12 @@
 
 /**
  * @swagger
- * /assets/{id}:
- *   get:
- *     tags:
- *       - 静态资源
- *     summary: 获取资源详情
- *     description: 获取指定资源ID的详细信息
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 资源ID
- *     responses:
- *       200:
- *         description: 成功获取资源详情
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/AssetResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
+ * /assets/admin/{id}:
  *   put:
  *     tags:
- *       - 静态资源
+ *       - 静态资源(管理员)
  *     summary: 更新资源信息
- *     description: 更新指定ID的资源元数据
+ *     description: 管理员更新指定ID的资源元数据
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -222,6 +186,8 @@
  *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 没有管理员权限
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -229,9 +195,9 @@
  *   
  *   delete:
  *     tags:
- *       - 静态资源
+ *       - 静态资源(管理员)
  *     summary: 删除资源
- *     description: 删除指定ID的资源
+ *     description: 管理员删除指定ID的资源
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -263,6 +229,8 @@
  *                   nullable: true
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 没有管理员权限
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -435,4 +403,44 @@
  *           type: string
  *           format: date-time
  *           description: 更新时间
+ */
+
+/**
+ * @swagger
+ * /assets/{id}:
+ *   get:
+ *     tags:
+ *       - 静态资源
+ *     summary: 获取资源详情
+ *     description: 获取指定资源ID的详细信息
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 资源ID
+ *     responses:
+ *       200:
+ *         description: 成功获取资源详情
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/AssetResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
  */ 

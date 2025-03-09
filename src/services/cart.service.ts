@@ -11,7 +11,7 @@ export class CartService {
 
   public async findUserCart(userId: string): Promise<Cart[]> {
     return this.cartRepository.find({
-      where: { userId: userId as any },
+      where: { userId },
       relations: ['product']
     });
   }
@@ -28,7 +28,7 @@ export class CartService {
     
     // 检查购物车中是否已有该商品
     let cart = await this.cartRepository.findOne({
-      where: { userId: userId as any, productId: cartData.productId }
+      where: { userId, productId: cartData.productId }
     });
     
     if (cart) {
@@ -42,7 +42,7 @@ export class CartService {
     } else {
       // 创建新购物车项
       const newCart = this.cartRepository.create({
-        userId: userId as any,
+        userId,
         productId: cartData.productId,
         quantity: cartData.quantity
       });
@@ -54,9 +54,9 @@ export class CartService {
     }
   }
 
-  public async updateCart(cartId: number, userId: string, cartData: UpdateCartDto): Promise<Cart> {
+  public async updateCart(cartId: string, userId: string, cartData: UpdateCartDto): Promise<Cart> {
     const cart = await this.cartRepository.findOne({
-      where: { id: cartId, userId: userId as any },
+      where: { id: cartId, userId },
       relations: ['product']
     });
     
@@ -75,9 +75,9 @@ export class CartService {
     return this.cartRepository.save(cart);
   }
 
-  public async removeFromCart(cartId: number, userId: string): Promise<void> {
+  public async removeFromCart(cartId: string, userId: string): Promise<void> {
     const cart = await this.cartRepository.findOne({
-      where: { id: cartId, userId: userId as any }
+      where: { id: cartId, userId }
     });
     
     if (!cart) throw new HttpException(404, '购物车项不存在');
@@ -86,6 +86,56 @@ export class CartService {
   }
 
   public async clearUserCart(userId: string): Promise<void> {
-    await this.cartRepository.delete({ userId: userId as any });
+    await this.cartRepository.delete({ userId });
+  }
+
+  /**
+   * 管理员：获取所有用户的购物车
+   */
+  public async findAllCarts(page: number = 1, limit: number = 10): Promise<{ carts: Cart[], total: number }> {
+    const [carts, total] = await this.cartRepository.findAndCount({
+      relations: ['product'],
+      order: { created_at: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+    
+    return { carts, total };
+  }
+
+  /**
+   * 管理员：获取特定用户的购物车
+   */
+  public async findUserCartByAdmin(userId: string): Promise<Cart[]> {
+    const carts = await this.cartRepository.find({
+      where: { userId },
+      relations: ['product'],
+      order: { created_at: 'DESC' }
+    });
+    
+    return carts;
+  }
+
+  /**
+   * 管理员：清空特定用户的购物车
+   */
+  public async clearUserCartByAdmin(userId: string): Promise<void> {
+    const userExists = await AppDataSource.getRepository('users').findOne({ where: { id: userId } });
+    if (!userExists) throw new HttpException(404, '用户不存在');
+    
+    await this.cartRepository.delete({ userId });
+  }
+
+  /**
+   * 管理员：删除特定购物车项
+   */
+  public async removeCartItemByAdmin(cartId: string): Promise<void> {
+    const cart = await this.cartRepository.findOne({
+      where: { id: cartId }
+    });
+    
+    if (!cart) throw new HttpException(404, '购物车项不存在');
+    
+    await this.cartRepository.delete(cartId);
   }
 } 

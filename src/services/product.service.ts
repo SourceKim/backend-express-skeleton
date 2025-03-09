@@ -23,7 +23,7 @@ export class ProductService {
     return { products, total };
   }
 
-  public async findProductById(productId: number): Promise<Product> {
+  public async findProductById(productId: string): Promise<Product> {
     const product = await this.productRepository.findOne({ where: { id: productId } });
     if (!product) throw new HttpException(404, '产品不存在');
     
@@ -49,7 +49,7 @@ export class ProductService {
     return newProduct;
   }
 
-  public async updateProduct(productId: number, productData: UpdateProductDto): Promise<Product> {
+  public async updateProduct(productId: string, productData: UpdateProductDto): Promise<Product> {
     const product = await this.findProductById(productId);
     
     // 更新产品数据
@@ -62,7 +62,7 @@ export class ProductService {
     return product;
   }
 
-  public async deleteProduct(productId: number): Promise<void> {
+  public async deleteProduct(productId: string): Promise<void> {
     const product = await this.findProductById(productId);
     await this.productRepository.delete(productId);
   }

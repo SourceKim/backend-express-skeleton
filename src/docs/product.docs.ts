@@ -169,12 +169,16 @@
  *                 totalPages:
  *                   type: number
  *                   description: 总页数
- *
+ */
+
+/**
+ * @swagger
+ * /products/admin:
  *   post:
  *     tags:
- *       - 产品管理
+ *       - 产品管理(管理员)
  *     summary: 创建产品
- *     description: 创建新产品
+ *     description: 管理员创建新产品
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -215,6 +219,16 @@
  *                 message:
  *                   type: string
  *                   example: 未授权
+ *       403:
+ *         description: 没有管理员权限
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 没有管理员权限
  */
 
 /**
@@ -274,12 +288,16 @@
  *                 message:
  *                   type: string
  *                   example: 产品不存在
- *
+ */
+
+/**
+ * @swagger
+ * /products/admin/{id}:
  *   put:
  *     tags:
- *       - 产品管理
+ *       - 产品管理(管理员)
  *     summary: 更新产品
- *     description: 根据ID更新产品信息
+ *     description: 管理员根据ID更新产品信息
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -327,6 +345,16 @@
  *                 message:
  *                   type: string
  *                   example: 未授权
+ *       403:
+ *         description: 没有管理员权限
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 没有管理员权限
  *       404:
  *         description: 产品不存在
  *         content:
@@ -340,9 +368,9 @@
  *
  *   delete:
  *     tags:
- *       - 产品管理
+ *       - 产品管理(管理员)
  *     summary: 删除产品
- *     description: 根据ID删除产品
+ *     description: 管理员根据ID删除产品
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -373,6 +401,16 @@
  *                 message:
  *                   type: string
  *                   example: 未授权
+ *       403:
+ *         description: 没有管理员权限
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 没有管理员权限
  *       404:
  *         description: 产品不存在
  *         content:

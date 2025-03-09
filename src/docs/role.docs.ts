@@ -3,9 +3,9 @@
  * /roles:
  *   get:
  *     tags:
- *       - 角色管理
+ *       - 角色管理(管理员)
  *     summary: 获取角色列表
- *     description: 获取系统中所有角色的列表
+ *     description: 管理员获取系统中所有角色的列表
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -32,15 +32,15 @@
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: 权限不足
+ *         description: 没有管理员权限
  *       500:
  *         $ref: '#/components/responses/InternalError'
  *   
  *   post:
  *     tags:
- *       - 角色管理
+ *       - 角色管理(管理员)
  *     summary: 创建角色
- *     description: 创建新的角色
+ *     description: 管理员创建新的角色
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -73,7 +73,7 @@
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: 权限不足
+ *         description: 没有管理员权限
  *       500:
  *         $ref: '#/components/responses/InternalError'
  */

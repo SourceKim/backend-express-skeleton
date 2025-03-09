@@ -29,7 +29,7 @@ export class ProductController {
 
   public getProductById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const productId = parseInt(req.params.id);
+      const productId = req.params.id;
       const product = await this.productService.findProductById(productId);
       res.status(200).json({ data: product });
     } catch (error) {
@@ -72,7 +72,7 @@ export class ProductController {
 
   public updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const productId = parseInt(req.params.id);
+      const productId = req.params.id;
       
       // 手动验证请求数据
       const productDto = plainToClass(UpdateProductDto, req.body);
@@ -98,7 +98,7 @@ export class ProductController {
 
   public deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const productId = parseInt(req.params.id);
+      const productId = req.params.id;
       await this.productService.deleteProduct(productId);
       res.status(200).json({ message: '产品删除成功' });
     } catch (error) {

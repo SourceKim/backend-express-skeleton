@@ -12,9 +12,9 @@ enum OrderStatus {
 }
 
 class OrderProduct {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  id!: number;
+  id!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -48,10 +48,10 @@ class OrderAddress {
 
 @Entity('orders')
 export class Order {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
-  @Column()
+  @Column({ name: 'order_no' })
   @IsString()
   @IsNotEmpty({ message: '订单编号不能为空' })
   orderNo!: string;
@@ -59,7 +59,7 @@ export class Order {
   @ManyToOne(() => User, user => user.orders)
   user!: User;
 
-  @Column()
+  @Column({ name: 'user_id' })
   @IsString()
   @IsNotEmpty({ message: '用户ID不能为空' })
   userId!: string; // 修改为string类型，与User.id保持一致
@@ -70,7 +70,7 @@ export class Order {
   @Type(() => OrderProduct)
   products!: OrderProduct[];
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', { precision: 10, scale: 2, name: 'total_amount' })
   @IsNumber()
   @Min(0, { message: '订单金额不能小于0' })
   totalAmount!: number;

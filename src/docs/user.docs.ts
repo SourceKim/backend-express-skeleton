@@ -494,4 +494,331 @@
  *           type: string
  *           format: date-time
  *           description: 更新时间
+ */
+
+/**
+ * @swagger
+ * /users/profile:
+ *   get:
+ *     tags:
+ *       - 用户
+ *     summary: 获取当前用户信息
+ *     description: 获取当前登录用户的详细信息
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功获取用户信息
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/UserResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ *
+ *   put:
+ *     tags:
+ *       - 用户
+ *     summary: 更新当前用户信息
+ *     description: 更新当前登录用户的信息
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUserDto'
+ *     responses:
+ *       200:
+ *         description: 用户信息更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: 更新用户成功
+ *                 data:
+ *                   $ref: '#/components/schemas/UserResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @swagger
+ * /users/admin:
+ *   get:
+ *     tags:
+ *       - 用户管理(管理员)
+ *     summary: 获取用户列表
+ *     description: 管理员获取用户集合，支持分页和筛选
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 页码
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 每页数量
+ *       - in: query
+ *         name: username
+ *         schema:
+ *           type: string
+ *         description: 用户名
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *         description: 邮箱
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: 用户状态
+ *       - in: query
+ *         name: is_active
+ *         schema:
+ *           type: boolean
+ *         description: 是否激活
+ *     responses:
+ *       200:
+ *         description: 成功获取用户列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/UserListResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 没有管理员权限
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ *   
+ *   post:
+ *     tags:
+ *       - 用户管理(管理员)
+ *     summary: 创建用户
+ *     description: 管理员创建新用户
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateUserDto'
+ *     responses:
+ *       201:
+ *         description: 用户创建成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: 创建用户成功
+ *                 data:
+ *                   $ref: '#/components/schemas/UserResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 没有管理员权限
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @swagger
+ * /users/admin/{id}:
+ *   get:
+ *     tags:
+ *       - 用户管理(管理员)
+ *     summary: 获取用户详情
+ *     description: 管理员获取指定用户ID的详细信息
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     responses:
+ *       200:
+ *         description: 成功获取用户详情
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/UserResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 没有管理员权限
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ *   
+ *   put:
+ *     tags:
+ *       - 用户管理(管理员)
+ *     summary: 更新用户
+ *     description: 管理员更新指定ID的用户信息
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUserDto'
+ *     responses:
+ *       200:
+ *         description: 用户更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: 更新用户成功
+ *                 data:
+ *                   $ref: '#/components/schemas/UserResponseDto'
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 没有管理员权限
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ *   
+ *   delete:
+ *     tags:
+ *       - 用户管理(管理员)
+ *     summary: 删除用户
+ *     description: 管理员删除指定ID的用户
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     responses:
+ *       200:
+ *         description: 用户删除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: 删除用户成功
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 没有管理员权限
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
  */ 

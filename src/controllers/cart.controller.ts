@@ -15,6 +15,7 @@ export class CartController {
         res.status(401).json({ message: '未授权' });
         return;
       }
+      
       const cartItems = await this.cartService.findUserCart(userId);
       res.status(200).json({ data: cartItems });
     } catch (error) {
@@ -43,9 +44,7 @@ export class CartController {
         return;
       }
       
-      // 转换为正确的类型
-      const cartData = req.body as unknown as AddToCartDto;
-      const cartItem = await this.cartService.addToCart(userId, cartData);
+      const cartItem = await this.cartService.addToCart(userId, req.body);
       res.status(201).json({ data: cartItem, message: '商品已添加到购物车' });
     } catch (error) {
       next(error);
@@ -59,7 +58,8 @@ export class CartController {
         res.status(401).json({ message: '未授权' });
         return;
       }
-      const cartId = parseInt(req.params.id);
+      
+      const cartId = req.params.id;
       
       // 手动验证请求数据
       const cartDto = plainToClass(UpdateCartDto, req.body);
@@ -74,9 +74,7 @@ export class CartController {
         return;
       }
       
-      // 转换为正确的类型
-      const cartData = req.body as unknown as UpdateCartDto;
-      const updatedCart = await this.cartService.updateCart(cartId, userId, cartData);
+      const updatedCart = await this.cartService.updateCart(cartId, userId, req.body);
       res.status(200).json({ data: updatedCart, message: '购物车已更新' });
     } catch (error) {
       next(error);
@@ -90,7 +88,8 @@ export class CartController {
         res.status(401).json({ message: '未授权' });
         return;
       }
-      const cartId = parseInt(req.params.id);
+      
+      const cartId = req.params.id;
       await this.cartService.removeFromCart(cartId, userId);
       res.status(200).json({ message: '商品已从购物车移除' });
     } catch (error) {
@@ -105,8 +104,84 @@ export class CartController {
         res.status(401).json({ message: '未授权' });
         return;
       }
+      
       await this.cartService.clearUserCart(userId);
       res.status(200).json({ message: '购物车已清空' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * 管理员：获取所有用户的购物车
+   */
+  public getAllCarts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      const { carts, total } = await this.cartService.findAllCarts(page, limit);
+      
+      res.status(200).json({
+        data: carts,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * 管理员：获取特定用户的购物车
+   */
+  public getUserCartByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.params.userId;
+      
+      const carts = await this.cartService.findUserCartByAdmin(userId);
+      
+      res.status(200).json({
+        data: carts
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * 管理员：清空特定用户的购物车
+   */
+  public clearUserCartByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.params.userId;
+      
+      await this.cartService.clearUserCartByAdmin(userId);
+      
+      res.status(200).json({
+        message: '用户购物车已清空'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * 管理员：删除特定购物车项
+   */
+  public removeCartItemByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const cartId = req.params.id;
+      
+      await this.cartService.removeCartItemByAdmin(cartId);
+      
+      res.status(200).json({
+        message: '购物车项已删除'
+      });
     } catch (error) {
       next(error);
     }

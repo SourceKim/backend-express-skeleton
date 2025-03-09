@@ -3,13 +3,14 @@ import { IsString, IsNumber, IsNotEmpty, Min, IsEnum, IsUrl, IsOptional } from '
 
 enum ProductStatus {
   ACTIVE = 'active',
-  INACTIVE = 'inactive'
+  INACTIVE = 'inactive',
+  OUT_OF_STOCK = 'out_of_stock'
 }
 
 @Entity('products')
 export class Product {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column()
   @IsString()
@@ -42,8 +43,8 @@ export class Product {
   category!: string; // 直接存储分类名称，不使用外键
 
   @Column({ default: 'active' })
-  @IsEnum(ProductStatus, { message: '状态只能是active或inactive' })
-  status!: string; // 'active' or 'inactive'
+  @IsEnum(ProductStatus, { message: '状态只能是active、inactive或out_of_stock' })
+  status!: string; // 'active', 'inactive', 'out_of_stock'
 
   @CreateDateColumn({ name: 'created_at' })
   created_at!: Date;

@@ -3,9 +3,9 @@
  * /permissions:
  *   get:
  *     tags:
- *       - 权限管理
+ *       - 权限管理(管理员)
  *     summary: 获取权限列表
- *     description: 获取系统中所有权限的列表
+ *     description: 管理员获取系统中所有权限的列表
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -32,15 +32,15 @@
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: 权限不足
+ *         description: 没有管理员权限
  *       500:
  *         $ref: '#/components/responses/InternalError'
  *   
  *   post:
  *     tags:
- *       - 权限管理
+ *       - 权限管理(管理员)
  *     summary: 创建权限
- *     description: 创建新的权限定义
+ *     description: 管理员创建新的权限定义
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -73,7 +73,7 @@
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: 权限不足
+ *         description: 没有管理员权限
  *       500:
  *         $ref: '#/components/responses/InternalError'
  */
@@ -83,9 +83,9 @@
  * /permissions/{id}:
  *   get:
  *     tags:
- *       - 权限管理
+ *       - 权限管理(管理员)
  *     summary: 获取权限详情
- *     description: 获取指定权限ID的详细信息
+ *     description: 管理员获取指定权限ID的详细信息
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -117,7 +117,7 @@
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: 权限不足
+ *         description: 没有管理员权限
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -125,9 +125,9 @@
  *   
  *   put:
  *     tags:
- *       - 权限管理
+ *       - 权限管理(管理员)
  *     summary: 更新权限
- *     description: 更新指定ID的权限信息
+ *     description: 管理员更新指定ID的权限信息
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -167,7 +167,7 @@
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: 权限不足
+ *         description: 没有管理员权限
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -175,9 +175,9 @@
  *   
  *   delete:
  *     tags:
- *       - 权限管理
+ *       - 权限管理(管理员)
  *     summary: 删除权限
- *     description: 删除指定ID的权限
+ *     description: 管理员删除指定ID的权限
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -210,7 +210,7 @@
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
- *         description: 权限不足
+ *         description: 没有管理员权限
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:

@@ -289,4 +289,161 @@
  *                 message:
  *                   type: string
  *                   example: 购物车项不存在
+ */
+
+/**
+ * @swagger
+ * /cart/admin:
+ *   get:
+ *     tags:
+ *       - 购物车(管理员)
+ *     summary: 获取所有用户的购物车
+ *     description: 管理员获取所有用户的购物车
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 页码
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 每页数量
+ *     responses:
+ *       200:
+ *         description: 成功获取所有用户的购物车
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Cart'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       401:
+ *         description: 未授权
+ *       403:
+ *         description: 没有管理员权限
+ */
+
+/**
+ * @swagger
+ * /cart/admin/user/{userId}:
+ *   get:
+ *     tags:
+ *       - 购物车(管理员)
+ *     summary: 获取特定用户的购物车
+ *     description: 管理员获取特定用户的购物车
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     responses:
+ *       200:
+ *         description: 成功获取用户的购物车
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Cart'
+ *       401:
+ *         description: 未授权
+ *       403:
+ *         description: 没有管理员权限
+ *       404:
+ *         description: 用户不存在
+ *
+ *   delete:
+ *     tags:
+ *       - 购物车(管理员)
+ *     summary: 清空特定用户的购物车
+ *     description: 管理员清空特定用户的购物车
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 用户ID
+ *     responses:
+ *       200:
+ *         description: 用户购物车已清空
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 用户购物车已清空
+ *       401:
+ *         description: 未授权
+ *       403:
+ *         description: 没有管理员权限
+ *       404:
+ *         description: 用户不存在
+ */
+
+/**
+ * @swagger
+ * /cart/admin/{id}:
+ *   delete:
+ *     tags:
+ *       - 购物车(管理员)
+ *     summary: 删除特定购物车项
+ *     description: 管理员删除特定购物车项
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 购物车项ID
+ *     responses:
+ *       200:
+ *         description: 购物车项已删除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 购物车项已删除
+ *       401:
+ *         description: 未授权
+ *       403:
+ *         description: 没有管理员权限
+ *       404:
+ *         description: 购物车项不存在
  */ 
