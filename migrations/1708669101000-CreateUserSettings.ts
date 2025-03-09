@@ -18,7 +18,7 @@ export class CreateUserSettings1708669101000 implements MigrationInterface {
                     {
                         name: "user_id",
                         type: "varchar",
-                        length: "16",
+                        length: "36",
                         isNullable: false
                     },
                     {

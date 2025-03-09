@@ -15,7 +15,8 @@
  *         - status
  *       properties:
  *         id:
- *           type: number
+ *           type: string
+ *           format: uuid
  *           description: 产品ID
  *         name:
  *           type: string
@@ -38,7 +39,7 @@
  *           description: 产品分类
  *         status:
  *           type: string
- *           enum: [active, inactive]
+ *           enum: [active, inactive, out_of_stock]
  *           description: 产品状态
  *         created_at:
  *           type: string

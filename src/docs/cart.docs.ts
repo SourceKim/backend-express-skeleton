@@ -11,13 +11,15 @@
  *         - quantity
  *       properties:
  *         id:
- *           type: number
+ *           type: string
+ *           format: uuid
  *           description: 购物车项ID
  *         userId:
  *           type: string
  *           description: 用户ID
  *         productId:
- *           type: number
+ *           type: string
+ *           format: uuid
  *           description: 产品ID
  *         quantity:
  *           type: number
@@ -41,7 +43,8 @@
  *         - quantity
  *       properties:
  *         productId:
- *           type: number
+ *           type: string
+ *           format: uuid
  *           description: 产品ID
  *         quantity:
  *           type: number

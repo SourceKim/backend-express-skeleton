@@ -29,7 +29,7 @@ export class CreateRole1708669201000 implements MigrationInterface {
         // 创建用户-角色关联表
         await queryRunner.query(`
             CREATE TABLE user_roles (
-                user_id VARCHAR(16) NOT NULL,
+                user_id VARCHAR(36) NOT NULL,
                 role_id VARCHAR(36) NOT NULL,
                 PRIMARY KEY (user_id, role_id),
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

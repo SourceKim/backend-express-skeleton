@@ -13,7 +13,9 @@ export class CreateOrderTable1708669600000 implements MigrationInterface {
                         name: "id",
                         type: "varchar",
                         length: "36",
-                        isPrimary: true
+                        isPrimary: true,
+                        isGenerated: true,
+                        generationStrategy: 'uuid'
                     },
                     {
                         name: "order_no",

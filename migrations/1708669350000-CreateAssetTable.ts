@@ -78,7 +78,7 @@ export class CreateAssetTable1708669350000 implements MigrationInterface {
                     {
                         name: "user_id",
                         type: "varchar",
-                        length: "16",
+                        length: "36",
                         isNullable: true,
                         comment: "上传用户ID"
                     },

@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, BeforeUpdate, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, BeforeUpdate, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { IsEmail, Length, IsOptional, Matches, IsEnum, MinLength } from 'class-validator';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '@/models/role.model';
@@ -13,7 +13,7 @@ export enum UserStatus {
 
 @Entity('users')
 export class User {
-    @PrimaryColumn({ type: 'varchar', length: 16 })
+    @PrimaryGeneratedColumn('uuid')
     id!: string;
 
     @Column({ type: 'varchar', length: 100, unique: true })

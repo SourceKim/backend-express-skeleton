@@ -13,12 +13,14 @@ export class CreateCartTable1708669500000 implements MigrationInterface {
                         name: "id",
                         type: "varchar",
                         length: "36",
-                        isPrimary: true
+                        isPrimary: true,
+                        isGenerated: true,
+                        generationStrategy: 'uuid'
                     },
                     {
                         name: "user_id",
                         type: "varchar",
-                        length: "16",
+                        length: "36",
                         isNullable: false
                     },
                     {

@@ -26,7 +26,9 @@ export class CreateProductTable1708669400000 implements MigrationInterface {
                         name: "id",
                         type: "varchar",
                         length: "36",
-                        isPrimary: true
+                        isPrimary: true,
+                        isGenerated: true,
+                        generationStrategy: 'uuid'
                     },
                     {
                         name: "name",
@@ -37,7 +39,7 @@ export class CreateProductTable1708669400000 implements MigrationInterface {
                     {
                         name: "description",
                         type: "text",
-                        isNullable: true
+                        isNullable: false
                     },
                     {
                         name: "price",
@@ -56,13 +58,13 @@ export class CreateProductTable1708669400000 implements MigrationInterface {
                         name: "image",
                         type: "varchar",
                         length: "255",
-                        isNullable: true
+                        isNullable: false
                     },
                     {
                         name: "category",
                         type: "varchar",
                         length: "100",
-                        isNullable: true
+                        isNullable: false
                     },
                     {
                         name: "status",
