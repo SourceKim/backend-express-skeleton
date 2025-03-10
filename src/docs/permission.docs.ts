@@ -3,7 +3,7 @@
  * /permissions:
  *   get:
  *     tags:
- *       - 权限管理(管理员)
+ *       - Permissions(admin)
  *     summary: 获取权限列表
  *     description: 管理员获取系统中所有权限的列表
  *     security:
@@ -38,7 +38,7 @@
  *   
  *   post:
  *     tags:
- *       - 权限管理(管理员)
+ *       - Permissions(admin)
  *     summary: 创建权限
  *     description: 管理员创建新的权限定义
  *     security:
@@ -83,7 +83,7 @@
  * /permissions/{id}:
  *   get:
  *     tags:
- *       - 权限管理(管理员)
+ *       - Permissions(admin)
  *     summary: 获取权限详情
  *     description: 管理员获取指定权限ID的详细信息
  *     security:
@@ -125,7 +125,7 @@
  *   
  *   put:
  *     tags:
- *       - 权限管理(管理员)
+ *       - Permissions(admin)
  *     summary: 更新权限
  *     description: 管理员更新指定ID的权限信息
  *     security:
@@ -175,7 +175,7 @@
  *   
  *   delete:
  *     tags:
- *       - 权限管理(管理员)
+ *       - Permissions(admin)
  *     summary: 删除权限
  *     description: 管理员删除指定ID的权限
  *     security:

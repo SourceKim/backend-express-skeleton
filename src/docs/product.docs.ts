@@ -122,7 +122,7 @@
  * /products:
  *   get:
  *     tags:
- *       - 产品管理
+ *       - Products
  *     summary: 获取产品列表
  *     description: 获取所有产品的列表，支持分页和分类筛选
  *     parameters:
@@ -177,7 +177,7 @@
  * /products/admin:
  *   post:
  *     tags:
- *       - 产品管理(管理员)
+ *       - Products(admin)
  *     summary: 创建产品
  *     description: 管理员创建新产品
  *     security:
@@ -237,7 +237,7 @@
  * /products/categories:
  *   get:
  *     tags:
- *       - 产品管理
+ *       - Products
  *     summary: 获取所有产品分类
  *     description: 获取系统中所有的产品分类
  *     responses:
@@ -259,7 +259,7 @@
  * /products/{id}:
  *   get:
  *     tags:
- *       - 产品管理
+ *       - Products
  *     summary: 获取产品详情
  *     description: 根据ID获取产品详情
  *     parameters:
@@ -296,7 +296,7 @@
  * /products/admin/{id}:
  *   put:
  *     tags:
- *       - 产品管理(管理员)
+ *       - Products(admin)
  *     summary: 更新产品
  *     description: 管理员根据ID更新产品信息
  *     security:
@@ -369,7 +369,7 @@
  *
  *   delete:
  *     tags:
- *       - 产品管理(管理员)
+ *       - Products(admin)
  *     summary: 删除产品
  *     description: 管理员根据ID删除产品
  *     security:

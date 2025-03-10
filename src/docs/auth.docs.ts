@@ -3,7 +3,7 @@
  * /auth/register:
  *   post:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 用户注册
  *     description: 创建新用户账号
  *     requestBody:
@@ -128,7 +128,7 @@
  * /auth/login:
  *   post:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 用户登录
  *     description: 使用用户名和密码登录
  *     requestBody:
@@ -228,7 +228,7 @@
  * /auth/refresh-token:
  *   post:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 刷新令牌
  *     description: 使用刷新令牌获取新的访问令牌
  *     security:
@@ -267,7 +267,7 @@
  * /auth/logout:
  *   post:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 用户登出
  *     description: 使当前令牌失效
  *     security:
@@ -303,7 +303,7 @@
  * /auth/forgot-password:
  *   post:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 忘记密码
  *     description: 发送密码重置邮件
  *     requestBody:
@@ -352,7 +352,7 @@
  * /auth/reset-password:
  *   post:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 重置密码
  *     description: 使用重置令牌设置新密码
  *     requestBody:
@@ -405,7 +405,7 @@
  * /auth/change-password:
  *   post:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 修改密码
  *     description: 已登录用户修改密码
  *     security:
@@ -460,7 +460,7 @@
  * /auth/me:
  *   get:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 获取当前用户信息
  *     description: 获取当前登录用户的详细信息
  *     security:
@@ -546,7 +546,7 @@
  * /auth/update-profile:
  *   put:
  *     tags:
- *       - 认证
+ *       - Auth
  *     summary: 更新用户资料
  *     description: 更新当前登录用户的资料
  *     security:

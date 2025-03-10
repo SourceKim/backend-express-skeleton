@@ -3,7 +3,7 @@
  * /users:
  *   get:
  *     tags:
- *       - 用户
+ *       - Users
  *     summary: 获取用户列表
  *     description: 获取用户集合，支持分页和筛选
  *     parameters:
@@ -80,7 +80,7 @@
  *   
  *   post:
  *     tags:
- *       - 用户
+ *       - Users
  *     summary: 创建用户
  *     description: 管理员创建新用户
  *     security:
@@ -127,7 +127,7 @@
  * /users/{id}:
  *   get:
  *     tags:
- *       - 用户
+ *       - Users
  *     summary: 获取用户详情
  *     description: 获取指定用户ID的详细信息
  *     security:
@@ -169,7 +169,7 @@
  *   
  *   put:
  *     tags:
- *       - 用户
+ *       - Users
  *     summary: 更新用户
  *     description: 更新指定ID的用户信息
  *     security:
@@ -221,7 +221,7 @@
  *   
  *   delete:
  *     tags:
- *       - 用户
+ *       - Users
  *     summary: 删除用户
  *     description: 删除指定ID的用户
  *     security:
@@ -268,7 +268,7 @@
  * /users/{id}/status:
  *   patch:
  *     tags:
- *       - 用户
+ *       - Users
  *     summary: 更新用户状态
  *     description: 更新指定用户的状态（激活/禁用）
  *     security:
@@ -520,7 +520,7 @@
  * /users/profile:
  *   get:
  *     tags:
- *       - 用户
+ *       - Users
  *     summary: 获取当前用户信息
  *     description: 获取当前登录用户的详细信息
  *     security:
@@ -553,7 +553,7 @@
  *
  *   put:
  *     tags:
- *       - 用户
+ *       - Users
  *     summary: 更新当前用户信息
  *     description: 更新当前登录用户的信息
  *     security:
@@ -598,7 +598,7 @@
  * /users/admin:
  *   get:
  *     tags:
- *       - 用户管理(管理员)
+ *       - Users(admin)
  *     summary: 获取用户列表
  *     description: 管理员获取用户集合，支持分页和筛选
  *     security:
@@ -664,7 +664,7 @@
  *   
  *   post:
  *     tags:
- *       - 用户管理(管理员)
+ *       - Users(admin)
  *     summary: 创建用户
  *     description: 管理员创建新用户
  *     security:
@@ -709,7 +709,7 @@
  * /users/admin/{id}:
  *   get:
  *     tags:
- *       - 用户管理(管理员)
+ *       - Users(admin)
  *     summary: 获取用户详情
  *     description: 管理员获取指定用户ID的详细信息
  *     security:
@@ -751,7 +751,7 @@
  *   
  *   put:
  *     tags:
- *       - 用户管理(管理员)
+ *       - Users(admin)
  *     summary: 更新用户
  *     description: 管理员更新指定ID的用户信息
  *     security:
@@ -801,7 +801,7 @@
  *   
  *   delete:
  *     tags:
- *       - 用户管理(管理员)
+ *       - Users(admin)
  *     summary: 删除用户
  *     description: 管理员删除指定ID的用户
  *     security:

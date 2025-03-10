@@ -3,7 +3,7 @@
  * /roles:
  *   get:
  *     tags:
- *       - 角色管理(管理员)
+ *       - Roles(admin)
  *     summary: 获取角色列表
  *     description: 管理员获取系统中所有角色的列表
  *     security:
@@ -38,7 +38,7 @@
  *   
  *   post:
  *     tags:
- *       - 角色管理(管理员)
+ *       - Roles(admin)
  *     summary: 创建角色
  *     description: 管理员创建新的角色
  *     security:
@@ -83,7 +83,7 @@
  * /roles/{id}:
  *   get:
  *     tags:
- *       - 角色管理
+ *       - Roles
  *     summary: 获取角色详情
  *     description: 获取指定角色ID的详细信息
  *     security:
@@ -125,7 +125,7 @@
  *   
  *   put:
  *     tags:
- *       - 角色管理
+ *       - Roles
  *     summary: 更新角色
  *     description: 更新指定ID的角色信息
  *     security:
@@ -175,7 +175,7 @@
  *   
  *   delete:
  *     tags:
- *       - 角色管理
+ *       - Roles
  *     summary: 删除角色
  *     description: 删除指定ID的角色
  *     security:
@@ -222,7 +222,7 @@
  * /roles/{roleId}/permissions:
  *   post:
  *     tags:
- *       - 角色管理
+ *       - Roles
  *     summary: 为角色分配权限
  *     description: 为指定角色ID分配一组权限
  *     security:
@@ -276,7 +276,7 @@
  * /roles/users/{userId}/roles:
  *   post:
  *     tags:
- *       - 角色管理
+ *       - Roles
  *     summary: 为用户分配角色
  *     description: 为指定用户ID分配一组角色
  *     security:

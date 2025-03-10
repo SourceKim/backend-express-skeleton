@@ -3,7 +3,7 @@
  * /user-settings/profile/settings:
  *   get:
  *     tags:
- *       - 用户设置
+ *       - UserSettings
  *     summary: 获取当前用户设置
  *     description: 获取当前登录用户的设置信息
  *     security:
@@ -36,7 +36,7 @@
  *   
  *   post:
  *     tags:
- *       - 用户设置
+ *       - UserSettings
  *     summary: 创建当前用户设置
  *     description: 为当前登录用户创建设置信息
  *     security:
@@ -75,7 +75,7 @@
  *   
  *   put:
  *     tags:
- *       - 用户设置
+ *       - UserSettings
  *     summary: 更新当前用户设置
  *     description: 更新当前登录用户的设置信息
  *     security:
@@ -116,7 +116,7 @@
  *   
  *   delete:
  *     tags:
- *       - 用户设置
+ *       - UserSettings
  *     summary: 删除当前用户设置
  *     description: 删除当前登录用户的设置信息
  *     security:
@@ -153,7 +153,7 @@
  * /user-settings/admin/{userId}/settings:
  *   get:
  *     tags:
- *       - 用户设置(管理员)
+ *       - UserSettings(admin)
  *     summary: 获取指定用户设置
  *     description: 管理员获取指定用户的设置信息
  *     security:
@@ -195,7 +195,7 @@
  *   
  *   post:
  *     tags:
- *       - 用户设置(管理员)
+ *       - UserSettings(admin)
  *     summary: 创建指定用户设置
  *     description: 管理员为指定用户创建设置信息
  *     security:
@@ -243,7 +243,7 @@
  *   
  *   put:
  *     tags:
- *       - 用户设置(管理员)
+ *       - UserSettings(admin)
  *     summary: 更新指定用户设置
  *     description: 管理员更新指定用户的设置信息
  *     security:
@@ -293,7 +293,7 @@
  *   
  *   delete:
  *     tags:
- *       - 用户设置(管理员)
+ *       - UserSettings(admin)
  *     summary: 删除指定用户设置
  *     description: 管理员删除指定用户的设置信息
  *     security:

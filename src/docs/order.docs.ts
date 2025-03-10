@@ -118,7 +118,7 @@
  * /orders:
  *   get:
  *     tags:
- *       - 订单管理
+ *       - Orders
  *     summary: 获取订单列表
  *     description: 获取当前用户的订单列表
  *     security:
@@ -148,7 +148,7 @@
  *
  *   post:
  *     tags:
- *       - 订单管理
+ *       - Orders
  *     summary: 创建订单
  *     description: 从购物车创建订单
  *     security:
@@ -198,7 +198,7 @@
  * /orders/{id}:
  *   get:
  *     tags:
- *       - 订单管理
+ *       - Orders
  *     summary: 获取订单详情
  *     description: 根据ID获取订单详情
  *     security:
@@ -248,7 +248,7 @@
  * /orders/{id}/status:
  *   put:
  *     tags:
- *       - 订单管理
+ *       - Orders
  *     summary: 更新订单状态
  *     description: 更新指定订单的状态
  *     security:
@@ -316,7 +316,7 @@
  * /orders/admin:
  *   get:
  *     tags:
- *       - 订单管理(管理员)
+ *       - Orders(admin)
  *     summary: 获取所有订单
  *     description: 管理员获取所有用户的订单列表
  *     security:
@@ -368,7 +368,7 @@
  * /orders/admin/filter:
  *   get:
  *     tags:
- *       - 订单管理(管理员)
+ *       - Orders(admin)
  *     summary: 筛选订单
  *     description: 管理员按条件筛选订单
  *     security:
@@ -458,7 +458,7 @@
  * /orders/admin/{id}:
  *   put:
  *     tags:
- *       - 订单管理(管理员)
+ *       - Orders(admin)
  *     summary: 更新订单信息
  *     description: 管理员更新订单信息
  *     security:
@@ -511,7 +511,7 @@
  * /orders/admin/{id}:
  *   delete:
  *     tags:
- *       - 订单管理(管理员)
+ *       - Orders(admin)
  *     summary: 删除订单
  *     description: 管理员删除订单
  *     security:
@@ -548,7 +548,7 @@
  * /orders/admin/statistics:
  *   get:
  *     tags:
- *       - 订单管理(管理员)
+ *       - Orders(admin)
  *     summary: 获取订单统计数据
  *     description: 管理员获取订单统计数据
  *     security:
@@ -597,7 +597,7 @@
  * /orders/admin/{id}/refund:
  *   post:
  *     tags:
- *       - 订单管理(管理员)
+ *       - Orders(admin)
  *     summary: 订单退款
  *     description: 管理员处理订单退款
  *     security:

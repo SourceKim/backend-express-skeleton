@@ -67,7 +67,7 @@
  * /cart:
  *   get:
  *     tags:
- *       - 购物车
+ *       - Cart
  *     summary: 获取购物车
  *     description: 获取当前用户的购物车
  *     security:
@@ -97,7 +97,7 @@
  *
  *   post:
  *     tags:
- *       - 购物车
+ *       - Cart
  *     summary: 添加商品到购物车
  *     description: 添加商品到当前用户的购物车
  *     security:
@@ -153,7 +153,7 @@
  *
  *   delete:
  *     tags:
- *       - 购物车
+ *       - Cart
  *     summary: 清空购物车
  *     description: 清空当前用户的购物车
  *     security:
@@ -186,7 +186,7 @@
  * /cart/{id}:
  *   put:
  *     tags:
- *       - 购物车
+ *       - Cart
  *     summary: 更新购物车商品数量
  *     description: 更新购物车中指定商品的数量
  *     security:
@@ -249,7 +249,7 @@
  *
  *   delete:
  *     tags:
- *       - 购物车
+ *       - Cart
  *     summary: 从购物车移除商品
  *     description: 从购物车中移除指定商品
  *     security:
@@ -299,7 +299,7 @@
  * /cart/admin:
  *   get:
  *     tags:
- *       - 购物车(管理员)
+ *       - Cart(admin)
  *     summary: 获取所有用户的购物车
  *     description: 管理员获取所有用户的购物车
  *     security:
@@ -351,7 +351,7 @@
  * /cart/admin/user/{userId}:
  *   get:
  *     tags:
- *       - 购物车(管理员)
+ *       - Cart(admin)
  *     summary: 获取特定用户的购物车
  *     description: 管理员获取特定用户的购物车
  *     security:
@@ -384,7 +384,7 @@
  *
  *   delete:
  *     tags:
- *       - 购物车(管理员)
+ *       - Cart(admin)
  *     summary: 清空特定用户的购物车
  *     description: 管理员清空特定用户的购物车
  *     security:
@@ -420,7 +420,7 @@
  * /cart/admin/{id}:
  *   delete:
  *     tags:
- *       - 购物车(管理员)
+ *       - Cart(admin)
  *     summary: 删除特定购物车项
  *     description: 管理员删除特定购物车项
  *     security:
