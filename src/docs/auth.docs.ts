@@ -15,7 +15,6 @@
  *             required:
  *               - username
  *               - password
- *               - email
  *             properties:
  *               username:
  *                 type: string
@@ -33,9 +32,12 @@
  *               phone:
  *                 type: string
  *                 description: 手机号
+ *                 pattern: ^1[3-9]\d{9}$
  *               nickname:
  *                 type: string
  *                 description: 昵称
+ *                 minLength: 2
+ *                 maxLength: 100
  *               avatar:
  *                 type: string
  *                 description: 头像URL
@@ -44,7 +46,7 @@
  *                 description: 用户简介
  *                 maxLength: 500
  *     responses:
- *       200:
+ *       201:
  *         description: 注册成功
  *         content:
  *           application/json:
@@ -56,9 +58,60 @@
  *                   example: 0
  *                 message:
  *                   type: string
- *                   example: success
+ *                   example: 注册成功
  *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: 用户ID
+ *                     username:
+ *                       type: string
+ *                       description: 用户名
+ *                     email:
+ *                       type: string
+ *                       description: 邮箱
+ *                     phone:
+ *                       type: string
+ *                       description: 手机号
+ *                     nickname:
+ *                       type: string
+ *                       description: 昵称
+ *                     avatar:
+ *                       type: string
+ *                       description: 头像URL
+ *                     bio:
+ *                       type: string
+ *                       description: 用户简介
+ *                     status:
+ *                       type: string
+ *                       enum: [active, inactive, banned]
+ *                       description: 用户状态
+ *                     is_active:
+ *                       type: boolean
+ *                       description: 是否激活
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: 创建时间
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: 更新时间
+ *                     roles:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: 角色ID
+ *                           name:
+ *                             type: string
+ *                             description: 角色名称
+ *                           description:
+ *                             type: string
+ *                             description: 角色描述
  *                 error:
  *                   type: object
  *                   nullable: true
@@ -107,15 +160,58 @@
  *                   example: 0
  *                 message:
  *                   type: string
- *                   example: success
+ *                   example: 登录成功
  *                 data:
  *                   type: object
  *                   properties:
- *                     token:
+ *                     access_token:
  *                       type: string
  *                       description: JWT令牌
  *                     user:
- *                       $ref: '#/components/schemas/UserResponseDto'
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           description: 用户ID
+ *                         username:
+ *                           type: string
+ *                           description: 用户名
+ *                         email:
+ *                           type: string
+ *                           description: 邮箱
+ *                         phone:
+ *                           type: string
+ *                           description: 手机号
+ *                         nickname:
+ *                           type: string
+ *                           description: 昵称
+ *                         avatar:
+ *                           type: string
+ *                           description: 头像URL
+ *                         bio:
+ *                           type: string
+ *                           description: 用户简介
+ *                         status:
+ *                           type: string
+ *                           enum: [active, inactive, banned]
+ *                           description: 用户状态
+ *                         is_active:
+ *                           type: boolean
+ *                           description: 是否激活
+ *                         roles:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                                 description: 角色ID
+ *                               name:
+ *                                 type: string
+ *                                 description: 角色名称
+ *                               description:
+ *                                 type: string
+ *                                 description: 角色描述
  *                 error:
  *                   type: object
  *                   nullable: true
@@ -154,7 +250,7 @@
  *                 data:
  *                   type: object
  *                   properties:
- *                     token:
+ *                     access_token:
  *                       type: string
  *                       description: 新的JWT令牌
  *                 error:
@@ -384,10 +480,176 @@
  *                   type: string
  *                   example: success
  *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: 用户ID
+ *                     username:
+ *                       type: string
+ *                       description: 用户名
+ *                     email:
+ *                       type: string
+ *                       description: 邮箱
+ *                     phone:
+ *                       type: string
+ *                       description: 手机号
+ *                     nickname:
+ *                       type: string
+ *                       description: 昵称
+ *                     avatar:
+ *                       type: string
+ *                       description: 头像URL
+ *                     bio:
+ *                       type: string
+ *                       description: 用户简介
+ *                     status:
+ *                       type: string
+ *                       enum: [active, inactive, banned]
+ *                       description: 用户状态
+ *                     is_active:
+ *                       type: boolean
+ *                       description: 是否激活
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: 创建时间
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: 更新时间
+ *                     roles:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: 角色ID
+ *                           name:
+ *                             type: string
+ *                             description: 角色名称
+ *                           description:
+ *                             type: string
+ *                             description: 角色描述
  *                 error:
  *                   type: object
  *                   nullable: true
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @swagger
+ * /auth/update-profile:
+ *   put:
+ *     tags:
+ *       - 认证
+ *     summary: 更新用户资料
+ *     description: 更新当前登录用户的资料
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: 邮箱
+ *               phone:
+ *                 type: string
+ *                 description: 手机号
+ *                 pattern: ^1[3-9]\d{9}$
+ *               nickname:
+ *                 type: string
+ *                 description: 昵称
+ *                 minLength: 2
+ *                 maxLength: 100
+ *               avatar:
+ *                 type: string
+ *                 description: 头像URL
+ *               bio:
+ *                 type: string
+ *                 description: 用户简介
+ *                 maxLength: 500
+ *     responses:
+ *       200:
+ *         description: 资料更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: 资料更新成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: 用户ID
+ *                     username:
+ *                       type: string
+ *                       description: 用户名
+ *                     email:
+ *                       type: string
+ *                       description: 邮箱
+ *                     phone:
+ *                       type: string
+ *                       description: 手机号
+ *                     nickname:
+ *                       type: string
+ *                       description: 昵称
+ *                     avatar:
+ *                       type: string
+ *                       description: 头像URL
+ *                     bio:
+ *                       type: string
+ *                       description: 用户简介
+ *                     status:
+ *                       type: string
+ *                       enum: [active, inactive, banned]
+ *                       description: 用户状态
+ *                     is_active:
+ *                       type: boolean
+ *                       description: 是否激活
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: 创建时间
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: 更新时间
+ *                     roles:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: 角色ID
+ *                           name:
+ *                             type: string
+ *                             description: 角色名称
+ *                           description:
+ *                             type: string
+ *                             description: 角色描述
+ *                 error:
+ *                   type: object
+ *                   nullable: true
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       500:

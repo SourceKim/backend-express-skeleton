@@ -343,22 +343,17 @@
  *       properties:
  *         id:
  *           type: string
+ *           format: uuid
  *           description: 设置ID
- *         userId:
- *           type: string
- *           description: 用户ID
  *         theme:
  *           type: string
  *           description: 主题设置
  *         language:
  *           type: string
  *           description: 语言设置
- *         notifications:
- *           type: object
- *           description: 通知设置
- *         preferences:
- *           type: object
- *           description: 其他偏好设置
+ *         notifications_enabled:
+ *           type: boolean
+ *           description: 是否启用通知
  *         created_at:
  *           type: string
  *           format: date-time
@@ -370,6 +365,10 @@
  *
  *     CreateUserSettingsDto:
  *       type: object
+ *       required:
+ *         - theme
+ *         - language
+ *         - notifications_enabled
  *       properties:
  *         theme:
  *           type: string
@@ -377,12 +376,9 @@
  *         language:
  *           type: string
  *           description: 语言设置
- *         notifications:
- *           type: object
- *           description: 通知设置
- *         preferences:
- *           type: object
- *           description: 其他偏好设置
+ *         notifications_enabled:
+ *           type: boolean
+ *           description: 是否启用通知
  *
  *     UpdateUserSettingsDto:
  *       type: object
@@ -393,10 +389,7 @@
  *         language:
  *           type: string
  *           description: 语言设置
- *         notifications:
- *           type: object
- *           description: 通知设置
- *         preferences:
- *           type: object
- *           description: 其他偏好设置
+ *         notifications_enabled:
+ *           type: boolean
+ *           description: 是否启用通知
  */ 

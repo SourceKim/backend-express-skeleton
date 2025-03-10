@@ -11,6 +11,8 @@ import { ENV } from '@/config/env.config';
 
 const app = express();
 
+console.log(ENV.CORS_ORIGINS);
+
 // 中间件
 app.use(cors({
   origin: ENV.CORS_ORIGINS,

@@ -4,7 +4,6 @@ import permissionRoutes from '@/routes/permission.routes';
 import roleRoutes from '@/routes/role.routes';
 import userRoutes from '@/routes/user.routes';
 import userSettingsRoutes from '@/routes/user-settings.routes';
-import assetRoutes from '@/routes/asset.routes';
 import productRoutes from '@/routes/product.routes';
 import cartRoutes from '@/routes/cart.routes';
 import orderRoutes from '@/routes/order.routes';
@@ -21,7 +20,6 @@ router.use(`${API_VERSION}/permissions`, permissionRoutes);
 router.use(`${API_VERSION}/roles`, roleRoutes);
 router.use(`${API_VERSION}/users`, userRoutes);
 router.use(`${API_VERSION}`, userSettingsRoutes); // 用户设置路由
-router.use(`${API_VERSION}/assets`, assetRoutes);
 
 // 商城相关路由
 router.use(`${API_VERSION}/products`, productRoutes);

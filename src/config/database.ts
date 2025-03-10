@@ -6,10 +6,10 @@ import { User } from '@/models/user.model';
 import { UserSettings } from '@/models/user-settings.model';
 import { Permission } from '@/models/permission.model';
 import { Role } from '@/models/role.model';
-import { Asset } from '@/models/asset.model';
 import { Product } from '@/models/product.model';
 import { Order } from '@/models/order.model';
 import { Cart } from '@/models/cart.model';
+import { Material } from '@/models/material.model';
 
 export const AppDataSource = new DataSource({
     type: 'mysql',
@@ -19,16 +19,16 @@ export const AppDataSource = new DataSource({
     password: ENV.MYSQL_PASSWORD,  // 处理空密码的情况
     database: ENV.MYSQL_DATABASE,
     synchronize: false, // 禁用自动同步以避免数据结构冲突
-    logging: false, // 关闭数据库查询日志
+    logging: true, // 开启数据库查询日志
     entities: [
         User, 
         UserSettings, 
         Permission,
         Role,
-        Asset,
         Product,
         Order,
-        Cart
+        Cart,
+        Material
     ],
     migrations: ['migrations/*.ts'],
     subscribers: [],

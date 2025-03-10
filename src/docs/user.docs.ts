@@ -332,12 +332,12 @@
  *       required:
  *         - id
  *         - username
- *         - email
  *         - status
  *         - isActive
  *       properties:
  *         id:
  *           type: string
+ *           format: uuid
  *           description: 用户ID
  *         username:
  *           type: string
@@ -360,7 +360,7 @@
  *           description: 用户简介
  *         status:
  *           type: string
- *           enum: [ACTIVE, INACTIVE, BANNED]
+ *           enum: [active, inactive, banned]
  *           description: 用户状态
  *         isActive:
  *           type: boolean
@@ -372,7 +372,10 @@
  *             properties:
  *               id:
  *                 type: string
+ *                 format: uuid
  *               name:
+ *                 type: string
+ *               description:
  *                 type: string
  *           description: 用户角色
  *         created_at:
@@ -439,7 +442,7 @@
  *           description: 用户简介
  *         status:
  *           type: string
- *           enum: [ACTIVE, INACTIVE, BANNED]
+ *           enum: [active, inactive, banned]
  *           description: 用户状态
  *         roles:
  *           type: array
@@ -462,7 +465,9 @@
  *           description: 用户名
  *         email:
  *           type: string
+ *           format: email
  *           description: 邮箱
+ *           nullable: true
  *         phone:
  *           type: string
  *           description: 手机号
@@ -481,8 +486,8 @@
  *           nullable: true
  *         status:
  *           type: string
+ *           enum: [active, inactive, banned]
  *           description: 用户状态
- *           enum: [active, inactive, locked, pending]
  *         is_active:
  *           type: boolean
  *           description: 是否激活
@@ -494,6 +499,20 @@
  *           type: string
  *           format: date-time
  *           description: 更新时间
+ *         roles:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 format: uuid
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *                 nullable: true
+ *           description: 用户角色
  */
 
 /**

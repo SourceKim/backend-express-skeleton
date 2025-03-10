@@ -15,7 +15,7 @@ export async function adminMiddleware(req: Request, res: Response, next: NextFun
 
         // 检查用户是否具有管理员角色
         const isAdmin = req.user.roles?.some(role => 
-            role.name === 'admin' || role.name === 'superadmin'
+            role.name === 'admin' || role.name === 'super_admin'
         );
 
         if (!isAdmin) {

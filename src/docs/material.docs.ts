@@ -224,7 +224,7 @@
 
 /**
  * @swagger
- * /api/materials:
+ * /materials:
  *   get:
  *     summary: 获取素材列表
  *     description: 分页获取素材列表，支持多种过滤条件
@@ -373,7 +373,7 @@
 
 /**
  * @swagger
- * /api/materials/{id}:
+ * /materials/{id}:
  *   get:
  *     summary: 获取素材详情
  *     description: 根据ID获取素材详情
@@ -406,7 +406,7 @@
 
 /**
  * @swagger
- * /api/materials/{id}/related:
+ * /materials/{id}/related:
  *   get:
  *     summary: 获取相关素材
  *     description: 获取与指定素材相关的素材列表
@@ -441,7 +441,7 @@
 
 /**
  * @swagger
- * /api/materials/{id}/versions:
+ * /materials/{id}/versions:
  *   get:
  *     summary: 获取素材版本
  *     description: 获取指定素材的所有版本
@@ -476,7 +476,7 @@
 
 /**
  * @swagger
- * /api/materials/upload/batch:
+ * /materials/upload/batch:
  *   post:
  *     summary: 批量上传素材
  *     description: 批量上传多个文件类型素材
@@ -536,7 +536,7 @@
 
 /**
  * @swagger
- * /api/materials/text:
+ * /materials/text:
  *   post:
  *     summary: 创建文本素材
  *     description: 创建纯文本类型素材
@@ -571,7 +571,7 @@
 
 /**
  * @swagger
- * /api/materials/admin/{id}:
+ * /materials/admin/{id}:
  *   put:
  *     summary: 更新素材
  *     description: 更新素材信息（需要管理员权限）
@@ -648,7 +648,7 @@
 
 /**
  * @swagger
- * /api/materials/admin/batch/delete:
+ * /materials/admin/batch/delete:
  *   post:
  *     summary: 批量删除素材
  *     description: 批量删除多个素材（需要管理员权限）

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
 import { IsString, IsNumber, IsNotEmpty, Min, IsEnum, IsArray, ValidateNested, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 import { User } from './user.model';
@@ -51,18 +51,19 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ name: 'order_no' })
+  @Column()
   @IsString()
   @IsNotEmpty({ message: '订单编号不能为空' })
-  orderNo!: string;
+  order_no!: string;
 
   @ManyToOne(() => User, user => user.orders)
+  @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ name: 'user_id' })
+  @Column()
   @IsString()
   @IsNotEmpty({ message: '用户ID不能为空' })
-  userId!: string; // 修改为string类型，与User.id保持一致
+  user_id!: string; // 修改为string类型，与User.id保持一致
 
   @Column('json')
   @IsArray()
@@ -70,10 +71,10 @@ export class Order {
   @Type(() => OrderProduct)
   products!: OrderProduct[];
 
-  @Column('decimal', { precision: 10, scale: 2, name: 'total_amount' })
+  @Column('decimal', { precision: 10, scale: 2 })
   @IsNumber()
   @Min(0, { message: '订单金额不能小于0' })
-  totalAmount!: number;
+  total_amount!: number;
 
   @Column({ default: 'pending' })
   @IsEnum(OrderStatus, { message: '订单状态不正确' })

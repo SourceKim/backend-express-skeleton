@@ -5,6 +5,7 @@ import { OrderService } from '@/services/order.service';
 import { CartService } from '@/services/cart.service';
 import { CreateOrderDto, UpdateOrderStatusDto } from '@/dtos/order.dto';
 import { HttpException } from '@/exceptions/HttpException';
+import { ApiResponse } from '@/dtos/common.dto';
 
 export class OrderController {
   private orderService = new OrderService();
@@ -14,7 +15,10 @@ export class OrderController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       
@@ -27,7 +31,10 @@ export class OrderController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({ message });
+        res.status(400).json({
+          code: 400,
+          message
+        });
         return;
       }
       
@@ -35,7 +42,10 @@ export class OrderController {
       const cartItems = await this.cartService.findUserCart(userId);
       
       if (cartItems.length === 0) {
-        res.status(400).json({ message: '购物车为空，无法创建订单' });
+        res.status(400).json({
+          code: 400,
+          message: '购物车为空，无法创建订单'
+        });
         return;
       }
       
@@ -45,7 +55,11 @@ export class OrderController {
       // 清空购物车
       await this.cartService.clearUserCart(userId);
       
-      res.status(201).json({ data: order, message: '订单创建成功' });
+      res.status(201).json({
+        code: 0,
+        message: '订单创建成功',
+        data: order
+      });
     } catch (error) {
       next(error);
     }
@@ -55,11 +69,18 @@ export class OrderController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       const orders = await this.orderService.findUserOrders(userId);
-      res.status(200).json({ data: orders });
+      res.status(200).json({
+        code: 0,
+        message: '获取订单列表成功',
+        data: orders
+      });
     } catch (error) {
       next(error);
     }
@@ -69,12 +90,19 @@ export class OrderController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       const orderId = req.params.id;
       const order = await this.orderService.findOrderById(orderId, userId);
-      res.status(200).json({ data: order });
+      res.status(200).json({
+        code: 0,
+        message: '获取订单详情成功',
+        data: order
+      });
     } catch (error) {
       next(error);
     }
@@ -84,7 +112,10 @@ export class OrderController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       const orderId = req.params.id;
@@ -98,12 +129,19 @@ export class OrderController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({ message });
+        res.status(400).json({
+          code: 400,
+          message
+        });
         return;
       }
       
       const order = await this.orderService.updateOrderStatus(orderId, userId, req.body);
-      res.status(200).json({ data: order, message: '订单状态已更新' });
+      res.status(200).json({
+        code: 0,
+        message: '订单状态已更新',
+        data: order
+      });
     } catch (error) {
       next(error);
     }
@@ -120,12 +158,14 @@ export class OrderController {
       const { orders, total } = await this.orderService.findAllOrders(page, limit);
       
       res.status(200).json({
-        data: orders,
-        pagination: {
+        code: 0,
+        message: '获取所有订单成功',
+        data: {
+          items: orders,
           total,
           page,
           limit,
-          totalPages: Math.ceil(total / limit)
+          total_pages: Math.ceil(total / limit)
         }
       });
     } catch (error) {
@@ -153,12 +193,14 @@ export class OrderController {
       const { orders, total } = await this.orderService.filterOrders(filters);
       
       res.status(200).json({
-        data: orders,
-        pagination: {
+        code: 0,
+        message: '筛选订单成功',
+        data: {
+          items: orders,
           total,
           page: filters.page,
           limit: filters.limit,
-          totalPages: Math.ceil(total / filters.limit)
+          total_pages: Math.ceil(total / filters.limit)
         }
       });
     } catch (error) {
@@ -177,8 +219,9 @@ export class OrderController {
       const updatedOrder = await this.orderService.updateOrder(orderId, orderData);
       
       res.status(200).json({
-        data: updatedOrder,
-        message: '订单信息已更新'
+        code: 0,
+        message: '订单信息已更新',
+        data: updatedOrder
       });
     } catch (error) {
       next(error);
@@ -195,6 +238,7 @@ export class OrderController {
       await this.orderService.deleteOrder(orderId);
       
       res.status(200).json({
+        code: 0,
         message: '订单已删除'
       });
     } catch (error) {
@@ -210,6 +254,8 @@ export class OrderController {
       const statistics = await this.orderService.getOrderStatistics();
       
       res.status(200).json({
+        code: 0,
+        message: '获取订单统计数据成功',
         data: statistics
       });
     } catch (error) {
@@ -227,8 +273,9 @@ export class OrderController {
       const updatedOrder = await this.orderService.refundOrder(orderId);
       
       res.status(200).json({
-        data: updatedOrder,
-        message: '订单已退款并取消'
+        code: 0,
+        message: '订单已退款并取消',
+        data: updatedOrder
       });
     } catch (error) {
       next(error);

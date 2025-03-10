@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
 import { IsNumber, IsString, IsNotEmpty, Min } from 'class-validator';
 import { User } from './user.model';
 import { Product } from './product.model';
@@ -9,20 +9,22 @@ export class Cart {
   id!: string;
 
   @ManyToOne(() => User, user => user.carts)
+  @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ name: 'user_id' })
+  @Column()
   @IsString()
   @IsNotEmpty({ message: '用户ID不能为空' })
-  userId!: string;
+  user_id!: string;
 
   @ManyToOne(() => Product)
+  @JoinColumn({ name: 'product_id' })
   product!: Product;
 
-  @Column({ name: 'product_id' })
+  @Column()
   @IsString()
   @IsNotEmpty({ message: '产品ID不能为空' })
-  productId!: string;
+  product_id!: string;
 
   @Column()
   @IsNumber()

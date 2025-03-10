@@ -4,6 +4,7 @@ import { plainToClass } from 'class-transformer';
 import { ProductService } from '@/services/product.service';
 import { CreateProductDto, UpdateProductDto } from '@/dtos/product.dto';
 import { HttpException } from '@/exceptions/HttpException';
+import { ApiResponse } from '@/dtos/common.dto';
 
 export class ProductController {
   private productService = new ProductService();
@@ -16,11 +17,15 @@ export class ProductController {
       
       const products = await this.productService.findAllProducts(page, limit, category);
       res.status(200).json({
-        data: products.products,
-        total: products.total,
-        page,
-        limit,
-        totalPages: Math.ceil(products.total / limit)
+        code: 0,
+        message: '获取产品列表成功',
+        data: {
+          items: products.products,
+          total: products.total,
+          page,
+          limit,
+          total_pages: Math.ceil(products.total / limit)
+        }
       });
     } catch (error) {
       next(error);
@@ -31,7 +36,11 @@ export class ProductController {
     try {
       const productId = req.params.id;
       const product = await this.productService.findProductById(productId);
-      res.status(200).json({ data: product });
+      res.status(200).json({
+        code: 0,
+        message: '获取产品详情成功',
+        data: product
+      });
     } catch (error) {
       next(error);
     }
@@ -40,7 +49,11 @@ export class ProductController {
   public getCategories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const categories = await this.productService.findAllCategories();
-      res.status(200).json({ data: categories });
+      res.status(200).json({
+        code: 0,
+        message: '获取产品分类成功',
+        data: categories
+      });
     } catch (error) {
       next(error);
     }

@@ -4,6 +4,7 @@ import { plainToClass } from 'class-transformer';
 import { CartService } from '@/services/cart.service';
 import { AddToCartDto, UpdateCartDto } from '@/dtos/cart.dto';
 import { HttpException } from '@/exceptions/HttpException';
+import { ApiResponse } from '@/dtos/common.dto';
 
 export class CartController {
   private cartService = new CartService();
@@ -12,12 +13,19 @@ export class CartController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       
       const cartItems = await this.cartService.findUserCart(userId);
-      res.status(200).json({ data: cartItems });
+      res.status(200).json({
+        code: 0,
+        message: '获取购物车成功',
+        data: cartItems
+      });
     } catch (error) {
       next(error);
     }
@@ -27,7 +35,10 @@ export class CartController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       
@@ -40,12 +51,19 @@ export class CartController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({ message });
+        res.status(400).json({
+          code: 400,
+          message
+        });
         return;
       }
       
       const cartItem = await this.cartService.addToCart(userId, req.body);
-      res.status(201).json({ data: cartItem, message: '商品已添加到购物车' });
+      res.status(201).json({
+        code: 0,
+        message: '商品已添加到购物车',
+        data: cartItem
+      });
     } catch (error) {
       next(error);
     }
@@ -55,7 +73,10 @@ export class CartController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       
@@ -70,12 +91,19 @@ export class CartController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({ message });
+        res.status(400).json({
+          code: 400,
+          message
+        });
         return;
       }
       
       const updatedCart = await this.cartService.updateCart(cartId, userId, req.body);
-      res.status(200).json({ data: updatedCart, message: '购物车已更新' });
+      res.status(200).json({
+        code: 0,
+        message: '购物车已更新',
+        data: updatedCart
+      });
     } catch (error) {
       next(error);
     }
@@ -85,13 +113,19 @@ export class CartController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       
       const cartId = req.params.id;
       await this.cartService.removeFromCart(cartId, userId);
-      res.status(200).json({ message: '商品已从购物车移除' });
+      res.status(200).json({
+        code: 0,
+        message: '商品已从购物车移除'
+      });
     } catch (error) {
       next(error);
     }
@@ -101,12 +135,18 @@ export class CartController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ message: '未授权' });
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
         return;
       }
       
       await this.cartService.clearUserCart(userId);
-      res.status(200).json({ message: '购物车已清空' });
+      res.status(200).json({
+        code: 0,
+        message: '购物车已清空'
+      });
     } catch (error) {
       next(error);
     }
@@ -123,12 +163,14 @@ export class CartController {
       const { carts, total } = await this.cartService.findAllCarts(page, limit);
       
       res.status(200).json({
-        data: carts,
-        pagination: {
+        code: 0,
+        message: '获取所有购物车成功',
+        data: {
+          items: carts,
           total,
           page,
           limit,
-          totalPages: Math.ceil(total / limit)
+          total_pages: Math.ceil(total / limit)
         }
       });
     } catch (error) {
@@ -146,6 +188,8 @@ export class CartController {
       const carts = await this.cartService.findUserCartByAdmin(userId);
       
       res.status(200).json({
+        code: 0,
+        message: '获取用户购物车成功',
         data: carts
       });
     } catch (error) {
@@ -163,6 +207,7 @@ export class CartController {
       await this.cartService.clearUserCartByAdmin(userId);
       
       res.status(200).json({
+        code: 0,
         message: '用户购物车已清空'
       });
     } catch (error) {
@@ -180,6 +225,7 @@ export class CartController {
       await this.cartService.removeCartItemByAdmin(cartId);
       
       res.status(200).json({
+        code: 0,
         message: '购物车项已删除'
       });
     } catch (error) {

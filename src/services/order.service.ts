@@ -22,10 +22,10 @@ export class OrderService {
     const orderProducts = [];
 
     for (const item of cartItems) {
-      const product = await this.productRepository.findOne({ where: { id: item.productId } });
+      const product = await this.productRepository.findOne({ where: { id: item.product_id } });
       
       if (!product) {
-        throw new HttpException(404, `产品ID为${item.productId}的商品不存在`);
+        throw new HttpException(404, `产品ID为${item.product_id}的商品不存在`);
       }
       
       if (product.stock < item.quantity) {
@@ -53,10 +53,10 @@ export class OrderService {
     // 创建订单
     const orderNo = generateOrderNo();
     const newOrder = this.orderRepository.create({
-      orderNo,
-      userId,
+      order_no: orderNo,
+      user_id: userId,
       products: orderProducts,
-      totalAmount,
+      total_amount: totalAmount,
       status: 'pending',
       address: addressData
     });
@@ -69,17 +69,18 @@ export class OrderService {
   }
 
   public async findUserOrders(userId: string): Promise<any> {
-    const orders = await this.orderRepository.find({
-      where: { userId },
-      order: { created_at: 'DESC' }
-    });
+    const orders = await this.orderRepository.createQueryBuilder('order')
+      .where('order.user_id = :userId', { userId })
+      .orderBy('order.created_at', 'DESC')
+      .getMany();
     return orders;
   }
 
   public async findOrderById(orderId: string, userId: string): Promise<Order> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId, userId }
-    });
+    const order = await this.orderRepository.createQueryBuilder('order')
+      .where('order.id = :orderId', { orderId })
+      .andWhere('order.user_id = :userId', { userId })
+      .getOne();
     
     if (!order) throw new HttpException(404, '订单不存在');
     
@@ -134,11 +135,11 @@ export class OrderService {
    * 管理员：获取所有订单
    */
   public async findAllOrders(page: number = 1, limit: number = 10): Promise<{ orders: Order[], total: number }> {
-    const [orders, total] = await this.orderRepository.findAndCount({
-      order: { created_at: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit
-    });
+    const [orders, total] = await this.orderRepository.createQueryBuilder('order')
+      .orderBy('order.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
     
     return { orders, total };
   }
@@ -159,32 +160,45 @@ export class OrderService {
       limit = 10 
     } = filters;
 
-    const where: FindOptionsWhere<Order> = {};
-
-    if (orderNo) where.orderNo = Like(`%${orderNo}%`);
-    if (userId) where.userId = userId;
-    if (status) where.status = status;
+    const queryBuilder = this.orderRepository.createQueryBuilder('order');
+    
+    if (orderNo) {
+      queryBuilder.andWhere('order.order_no LIKE :orderNo', { orderNo: `%${orderNo}%` });
+    }
+    
+    if (userId) {
+      queryBuilder.andWhere('order.user_id = :userId', { userId });
+    }
+    
+    if (status) {
+      queryBuilder.andWhere('order.status = :status', { status });
+    }
     
     if (startDate && endDate) {
-      where.created_at = Between(new Date(startDate), new Date(endDate));
+      queryBuilder.andWhere('order.created_at BETWEEN :startDate AND :endDate', { 
+        startDate: new Date(startDate), 
+        endDate: new Date(endDate) 
+      });
     } else if (startDate) {
-      where.created_at = Between(new Date(startDate), new Date());
+      queryBuilder.andWhere('order.created_at >= :startDate', { startDate: new Date(startDate) });
     }
     
     if (minAmount && maxAmount) {
-      where.totalAmount = Between(minAmount, maxAmount);
+      queryBuilder.andWhere('order.total_amount BETWEEN :minAmount AND :maxAmount', { 
+        minAmount, 
+        maxAmount 
+      });
     } else if (minAmount) {
-      where.totalAmount = Between(minAmount, 999999999);
+      queryBuilder.andWhere('order.total_amount >= :minAmount', { minAmount });
     } else if (maxAmount) {
-      where.totalAmount = Between(0, maxAmount);
+      queryBuilder.andWhere('order.total_amount <= :maxAmount', { maxAmount });
     }
-
-    const [orders, total] = await this.orderRepository.findAndCount({
-      where,
-      order: { created_at: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit
-    });
+    
+    queryBuilder.orderBy('order.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+    
+    const [orders, total] = await queryBuilder.getManyAndCount();
     
     return { orders, total };
   }
@@ -220,7 +234,7 @@ export class OrderService {
     // 获取总销售额
     const totalSalesResult = await this.orderRepository
       .createQueryBuilder('order')
-      .select('SUM(order.totalAmount)', 'total')
+      .select('SUM(order.total_amount)', 'total')
       .where('order.status != :status', { status: 'cancelled' })
       .getRawOne();
     
@@ -244,9 +258,9 @@ export class OrderService {
    * 管理员：更新订单信息
    */
   public async updateOrder(orderId: string, orderData: any): Promise<Order> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId }
-    });
+    const order = await this.orderRepository.createQueryBuilder('order')
+      .where('order.id = :orderId', { orderId })
+      .getOne();
     
     if (!order) throw new HttpException(404, '订单不存在');
     
@@ -283,9 +297,9 @@ export class OrderService {
    * 管理员：删除订单
    */
   public async deleteOrder(orderId: string): Promise<void> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId }
-    });
+    const order = await this.orderRepository.createQueryBuilder('order')
+      .where('order.id = :orderId', { orderId })
+      .getOne();
     
     if (!order) throw new HttpException(404, '订单不存在');
     
@@ -301,9 +315,9 @@ export class OrderService {
    * 管理员：处理订单退款
    */
   public async refundOrder(orderId: string): Promise<Order> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId }
-    });
+    const order = await this.orderRepository.createQueryBuilder('order')
+      .where('order.id = :orderId', { orderId })
+      .getOne();
     
     if (!order) throw new HttpException(404, '订单不存在');
     
