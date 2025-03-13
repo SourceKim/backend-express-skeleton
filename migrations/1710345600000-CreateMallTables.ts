@@ -127,7 +127,8 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
           },
           {
             name: 'material_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isPrimary: true
           }
         ]
@@ -151,7 +152,7 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
       new TableForeignKey({
         columnNames: ['material_id'],
         referencedColumnNames: ['id'],
-        referencedTableName: 'material',
+        referencedTableName: 'materials',
         onDelete: 'CASCADE'
       })
     );
@@ -177,7 +178,8 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
           },
           {
             name: 'user_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isNullable: false
           },
           {
@@ -221,7 +223,7 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
       new TableForeignKey({
         columnNames: ['user_id'],
         referencedColumnNames: ['id'],
-        referencedTableName: 'user',
+        referencedTableName: 'users',
         onDelete: 'CASCADE'
       })
     );
@@ -311,7 +313,8 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
           },
           {
             name: 'user_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isNullable: false
           },
           {
@@ -344,7 +347,7 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
       new TableForeignKey({
         columnNames: ['user_id'],
         referencedColumnNames: ['id'],
-        referencedTableName: 'user',
+        referencedTableName: 'users',
         onDelete: 'CASCADE'
       })
     );

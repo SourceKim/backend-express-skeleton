@@ -13,7 +13,8 @@ export class CreatePermission1708669200000 implements MigrationInterface {
                 action VARCHAR(255) NOT NULL,
                 description VARCHAR(255),
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                deleted_at TIMESTAMP NULL
             )
         `);
     }

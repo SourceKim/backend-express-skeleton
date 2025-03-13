@@ -11,7 +11,8 @@ export class CreateRole1708669201000 implements MigrationInterface {
                 name VARCHAR(255) NOT NULL UNIQUE,
                 description VARCHAR(255),
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                deleted_at TIMESTAMP NULL
             )
         `);
 

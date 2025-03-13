@@ -88,6 +88,11 @@ export class CreateUserTables1708669100000 implements MigrationInterface {
                         type: "timestamp",
                         default: "CURRENT_TIMESTAMP",
                         onUpdate: "CURRENT_TIMESTAMP"
+                    },
+                    {
+                        name: "deleted_at",
+                        type: "timestamp",
+                        isNullable: true
                     }
                 ]
             }),

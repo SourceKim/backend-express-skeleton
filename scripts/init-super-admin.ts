@@ -120,7 +120,7 @@ async function initSuperAdmin() {
                 
                 if (!permission) {
                     permission = new Permission();
-                    permission.id = nanoid(16);
+                    (permission as any).id = nanoid(16);
                     permission.name = permissionName;
                     permission.resource = resource;
                     permission.action = action;
@@ -143,7 +143,7 @@ async function initSuperAdmin() {
 
         if (!role) {
             role = new Role();
-            role.id = nanoid(16);
+            (role as any).id = nanoid(16);
             role.name = 'super_admin';
             role.description = '超级管理员，拥有所有权限';
             role.permissions = permissions;
@@ -180,23 +180,23 @@ async function initSuperAdmin() {
             
             // 使用原始 SQL 插入用户记录
             await dataSourceToUse.query(
-                `INSERT INTO users (id, username, email, password, status, created_at, updated_at) 
-                 VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                `INSERT INTO users (id, username, email, password, status, isActive) 
+                 VALUES (?, ?, ?, ?, ?, ?)`,
                 [userId, adminUsername, adminEmail, hashedPassword, UserStatus.ACTIVE, true]
             );
             
             // 插入用户角色关系
             await dataSourceToUse.query(
                 `INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)`,
-                [userId, role.id]
+                [userId, (role as any).id]
             );
             
             console.log(`创建了超级管理员用户: ${adminUsername}`);
             
             // 从数据库中重新获取用户，以便进行密码验证测试
             user = await userRepository.findOne({
-                where: { id: userId },
-                select: ['id', 'username', 'password']
+                where: { username: adminUsername },
+                select: ['username', 'password'] as (keyof User)[]
             });
             
             if (user) {
