@@ -82,7 +82,7 @@ export class MaterialController {
 
     /**
      * 上传素材文件
-     * POST /api/materials/upload
+     * POST /api/v1/materials/upload
      */
     public uploadMaterial = async (req: any, res: Response<ApiResponse<MaterialDto>>): Promise<void> => {
         try {
@@ -145,7 +145,7 @@ export class MaterialController {
 
     /**
      * 批量上传素材文件
-     * POST /api/materials/upload/batch
+     * POST /api/v1/materials/upload/batch
      */
     public uploadMaterialsBatch = async (req: any, res: Response<ApiResponse<MaterialDto[]>>): Promise<void> => {
         try {
@@ -219,7 +219,7 @@ export class MaterialController {
 
     /**
      * 创建文本素材
-     * POST /api/materials/text
+     * POST /api/v1/materials/text
      */
     public createTextMaterial = async (
         req: Request, 
@@ -255,7 +255,7 @@ export class MaterialController {
 
     /**
      * 获取素材列表
-     * GET /api/materials
+     * GET /api/v1/materials
      */
     public getMaterials = async (
         req: Request, 
@@ -342,8 +342,8 @@ export class MaterialController {
     };
 
     /**
-     * 获取单个素材
-     * GET /api/materials/:id
+     * 获取素材详情
+     * GET /api/v1/materials/:id
      */
     public getMaterialById = async (
         req: Request, 
@@ -372,7 +372,7 @@ export class MaterialController {
 
     /**
      * 更新素材
-     * PUT /api/materials/:id
+     * PUT /api/v1/materials/admin/:id
      */
     public updateMaterial = async (
         req: Request, 
@@ -402,7 +402,7 @@ export class MaterialController {
 
     /**
      * 删除素材
-     * DELETE /api/materials/:id
+     * DELETE /api/v1/materials/admin/:id
      */
     public deleteMaterial = async (
         req: Request, 
@@ -430,7 +430,7 @@ export class MaterialController {
 
     /**
      * 批量删除素材
-     * DELETE /api/materials/batch
+     * POST /api/v1/materials/admin/batch/delete
      */
     public batchDeleteMaterials = async (
         req: Request, 
@@ -463,8 +463,8 @@ export class MaterialController {
     };
 
     /**
-     * 获取素材的相关素材
-     * GET /api/materials/:id/related
+     * 获取相关素材
+     * GET /api/v1/materials/:id/related
      */
     public getRelatedMaterials = async (
         req: Request, 
@@ -492,8 +492,8 @@ export class MaterialController {
     };
 
     /**
-     * 获取素材的版本历史
-     * GET /api/materials/:id/versions
+     * 获取素材版本历史
+     * GET /api/v1/materials/:id/versions
      */
     public getMaterialVersions = async (
         req: Request, 

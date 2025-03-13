@@ -208,7 +208,7 @@ export class OrderService {
   /**
    * 管理员：获取订单统计数据
    */
-  public async getOrderStatistics(): Promise<any> {
+  public async getOrderStatistics(startDate?: string, endDate?: string): Promise<any> {
     // 获取总订单数
     const totalOrders = await this.orderRepository.count();
     
@@ -242,6 +242,34 @@ export class OrderService {
     
     const totalSales = totalSalesResult?.total || 0;
     
+    // 如果提供了日期范围，获取该范围内的订单统计
+    let periodOrders = null;
+    let periodSales = null;
+    
+    if (startDate && endDate) {
+      const startDateTime = new Date(startDate);
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999); // 设置为当天结束时间
+      
+      periodOrders = await this.orderRepository.count({
+        where: {
+          created_at: Between(startDateTime, endDateTime)
+        }
+      });
+      
+      const periodSalesResult = await this.orderRepository
+        .createQueryBuilder('order')
+        .select('SUM(order.total_amount)', 'total')
+        .where('order.status != :status', { status: 'cancelled' })
+        .andWhere('order.created_at BETWEEN :startDate AND :endDate', {
+          startDate: startDateTime,
+          endDate: endDateTime
+        })
+        .getRawOne();
+      
+      periodSales = periodSalesResult?.total || 0;
+    }
+    
     return {
       totalOrders,
       statusCounts: {
@@ -252,7 +280,10 @@ export class OrderService {
         cancelled: statusCounts[4]
       },
       todayOrders,
-      totalSales
+      totalSales,
+      periodOrders,
+      periodSales,
+      period: startDate && endDate ? { startDate, endDate } : null
     };
   }
 
@@ -316,28 +347,40 @@ export class OrderService {
   /**
    * 管理员：处理订单退款
    */
-  public async refundOrder(orderId: string): Promise<Order> {
-    const order = await this.orderRepository.createQueryBuilder('order')
-      .where('order.id = :orderId', { orderId })
-      .getOne();
+  public async refundOrder(orderId: string, reason: string, amount: number): Promise<any> {
+    const order = await this.orderRepository.findOne({ where: { id: orderId } });
     
-    if (!order) throw new HttpException(404, '订单不存在');
+    if (!order) {
+      throw new HttpException(404, '订单不存在');
+    }
     
-    // 只有已支付或已发货的订单可以退款
-    if (order.status !== 'paid' && order.status !== 'shipped') {
-      throw new HttpException(400, '只有已支付或已发货的订单可以退款');
+    if (order.status === 'cancelled') {
+      throw new HttpException(400, '订单已取消，无法退款');
+    }
+    
+    if (order.status === 'completed') {
+      throw new HttpException(400, '订单已完成，请通过售后渠道处理退款');
     }
     
     // 恢复库存
     await this.restoreProductStock(order);
     
-    // 更新订单状态为已取消
+    // 更新订单状态
     order.status = 'cancelled';
+    order.refund_info = {
+      refunded_at: new Date(),
+      reason: reason || '管理员操作退款',
+      amount: amount || order.total_amount
+    };
     
     // 验证模型数据
     await validateModel(order);
     
     const updatedOrder = await this.orderRepository.save(order);
-    return updatedOrder;
+    
+    return {
+      order: updatedOrder,
+      refund_info: order.refund_info
+    };
   }
 } 

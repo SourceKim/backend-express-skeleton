@@ -1,13 +1,17 @@
-import { Request, Response } from 'express';
-import { UserSettingsService } from '../services/user-settings.service';
+import { Request, Response, NextFunction } from 'express';
+import { UserSettingsService } from '@/services/user-settings.service';
 import { ApiResponse } from '@/dtos/common.dto';
 import { 
-    CreateUserSettingsDto,
+    UserSettingsResponseDto,
     UpdateUserSettingsDto,
-    UserSettingsResponseDto
-} from '../dtos/user-settings.dto';
+    CreateUserSettingsDto
+} from '@/dtos/user-settings.dto';
 import { HttpException } from '@/exceptions/http.exception';
 
+/**
+ * 用户设置控制器
+ * 处理用户设置相关的请求
+ */
 export class UserSettingsController {
     private userSettingsService: UserSettingsService;
 
@@ -15,53 +19,44 @@ export class UserSettingsController {
         this.userSettingsService = new UserSettingsService();
     }
 
-    // 获取用户设置
+    /**
+     * 获取用户设置
+     * GET /api/v1/profile/settings 或 GET /api/v1/admin/:userId/settings
+     */
     public getUserSettings = async (
         req: Request, 
-        res: Response<ApiResponse<UserSettingsResponseDto>>
+        res: Response<ApiResponse<UserSettingsResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
-            const userId = req.params.userId;
-            const settings = await this.userSettingsService.getUserSettings(userId);
+            const userId = req.params.userId || (req.user?.id as string);
+            const userSettings = await this.userSettingsService.getUserSettings(userId);
             
-            if (!settings) {
-                res.status(404).json({
-                    code: 404,
-                    message: '用户设置不存在',
-                    data: undefined
-                });
-                return;
+            if (!userSettings) {
+                throw new HttpException(404, '用户设置不存在');
             }
             
             res.json({
                 code: 0,
                 message: 'success',
-                data: settings
+                data: userSettings
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '获取用户设置失败',
-                    error
-                });
-            }
+            next(error);
         }
     }
 
-    // 创建用户设置
+    /**
+     * 创建用户设置
+     * POST /api/v1/profile/settings 或 POST /api/v1/admin/:userId/settings
+     */
     public createUserSettings = async (
         req: Request<{ userId: string }, ApiResponse<UserSettingsResponseDto>, CreateUserSettingsDto>, 
-        res: Response<ApiResponse<UserSettingsResponseDto>>
+        res: Response<ApiResponse<UserSettingsResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
-            const userId = req.params.userId;
+            const userId = req.params.userId || (req.user?.id as string);
             const settingsData = req.body;
             const settings = await this.userSettingsService.createUserSettings(userId, settingsData);
             
@@ -71,70 +66,49 @@ export class UserSettingsController {
                 data: settings
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '创建用户设置失败',
-                    error
-                });
-            }
+            next(error);
         }
     }
 
-    // 更新用户设置
+    /**
+     * 更新用户设置
+     * PUT /api/v1/profile/settings 或 PUT /api/v1/admin/:userId/settings
+     */
     public updateUserSettings = async (
         req: Request<{ userId: string }, ApiResponse<UserSettingsResponseDto>, UpdateUserSettingsDto>, 
-        res: Response<ApiResponse<UserSettingsResponseDto>>
+        res: Response<ApiResponse<UserSettingsResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
-            const userId = req.params.userId;
+            const userId = req.params.userId || (req.user?.id as string);
             const settingsData = req.body;
-            const settings = await this.userSettingsService.updateUserSettings(userId, settingsData);
+            const userSettings = await this.userSettingsService.updateUserSettings(userId, settingsData);
             
-            if (!settings) {
-                res.status(404).json({
-                    code: 404,
-                    message: '用户设置不存在',
-                    data: undefined
-                });
-                return;
+            if (!userSettings) {
+                throw new HttpException(404, '用户设置不存在');
             }
             
             res.json({
                 code: 0,
                 message: '用户设置更新成功',
-                data: settings
+                data: userSettings
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '更新用户设置失败',
-                    error
-                });
-            }
+            next(error);
         }
     }
 
-    // 删除用户设置
+    /**
+     * 删除用户设置
+     * DELETE /api/v1/profile/settings 或 DELETE /api/v1/admin/:userId/settings
+     */
     public deleteUserSettings = async (
         req: Request<{ userId: string }>, 
-        res: Response<ApiResponse<void>>
+        res: Response<ApiResponse<void>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
-            const userId = req.params.userId;
+            const userId = req.params.userId || (req.user?.id as string);
             await this.userSettingsService.deleteUserSettings(userId);
             
             res.json({
@@ -143,19 +117,7 @@ export class UserSettingsController {
                 data: undefined
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '删除用户设置失败',
-                    error
-                });
-            }
+            next(error);
         }
     }
 } 

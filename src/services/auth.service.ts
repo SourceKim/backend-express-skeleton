@@ -52,7 +52,6 @@ export class AuthService {
             password,
             email,
             phone,
-            isActive: true
         });
 
         // 保存用户
@@ -80,7 +79,7 @@ export class AuthService {
         // 使用 findOne 查找用户，包括密码字段和角色关系
         const user = await this.userRepository.findOne({
             where: { username },
-            select: ['id', 'username', 'email', 'phone', 'avatar', 'status', 'bio', 'isActive', 'password'],
+            select: ['id', 'username', 'email', 'phone', 'avatar', 'status', 'bio', 'password'],
             relations: ['roles', 'roles.permissions']
         });
         
@@ -100,7 +99,7 @@ export class AuthService {
             throw new HttpException(401, '用户名或密码错误');
         }
 
-        if (!user.isActive) {
+        if (user.status == 'inactive') {
             throw new HttpException(403, '账户已被禁用');
         }
 
@@ -142,7 +141,6 @@ export class AuthService {
             avatar: user.avatar,
             status: user.status,
             bio: user.bio,
-            isActive: user.isActive,
             roles: user.roles,  // 包含角色信息
             created_at: user.created_at,
             updated_at: user.updated_at

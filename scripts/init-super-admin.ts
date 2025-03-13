@@ -180,7 +180,7 @@ async function initSuperAdmin() {
             
             // 使用原始 SQL 插入用户记录
             await dataSourceToUse.query(
-                `INSERT INTO users (id, username, email, password, status, isActive, created_at, updated_at) 
+                `INSERT INTO users (id, username, email, password, status, created_at, updated_at) 
                  VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
                 [userId, adminUsername, adminEmail, hashedPassword, UserStatus.ACTIVE, true]
             );

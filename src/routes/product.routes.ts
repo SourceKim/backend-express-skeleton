@@ -6,24 +6,24 @@ import { adminMiddleware } from '@/middlewares/admin.middleware';
 const router = Router();
 const controller = new ProductController();
 
-// 公开API - 不需要认证
+// 公开 API - 不需要认证
 router.get('/', controller.getProducts);
-router.get('/categories', controller.getCategories);
 router.get('/:id', controller.getProductById);
 
-// 管理员产品路由
-// 注意：这里使用 /admin 前缀，并添加认证和管理员中间件
-router.use('/admin', authMiddleware, adminMiddleware);
+// 分类公开 API
+router.get('/categories', controller.getCategories);
+router.get('/categories/:id', controller.getCategoryById);
 
-// 分类管理路由
+// 管理员 API - 需要管理员权限
+router.use('/admin', authMiddleware, adminMiddleware);
+// 产品管理
+router.post('/admin/products', controller.createProduct);
+router.put('/admin/products/:id', controller.updateProduct);
+router.delete('/admin/products/:id', controller.deleteProduct);
+
+// 分类管理
 router.post('/admin/categories', controller.createCategory);
-router.get('/admin/categories/:id', controller.getCategoryById);
 router.put('/admin/categories/:id', controller.updateCategory);
 router.delete('/admin/categories/:id', controller.deleteCategory);
-
-// 产品管理路由
-router.post('/admin', controller.createProduct);
-router.put('/admin/:id', controller.updateProduct);
-router.delete('/admin/:id', controller.deleteProduct);
 
 export default router; 

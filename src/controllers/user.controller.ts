@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { UserService } from '@/services/user.service';
 import { HttpException } from '@/exceptions/http.exception';
 import { ApiResponse } from '@/dtos/common.dto';
@@ -10,6 +10,10 @@ import {
     UserListResponseDto
 } from '@/dtos/user.dto';
 
+/**
+ * 用户控制器
+ * 处理用户相关的请求
+ */
 export class UserController {
     private userService: UserService;
 
@@ -17,6 +21,9 @@ export class UserController {
         this.userService = new UserService();
     }
 
+    /**
+     * 将用户实体转换为DTO
+     */
     private transformUserToDto(user: any): UserResponseDto {
         return {
             id: user.id,
@@ -27,16 +34,20 @@ export class UserController {
             avatar: user.avatar,
             bio: user.bio,
             status: user.status,
-            is_active: user.isActive,
             created_at: user.created_at,
             updated_at: user.updated_at,
             roles: user.roles || []
         };
     }
 
+    /**
+     * 创建用户
+     * POST /api/v1/users/admin
+     */
     createUser = async (
         req: Request<{}, ApiResponse<UserResponseDto>, CreateUserDto>,
-        res: Response<ApiResponse<UserResponseDto>>
+        res: Response<ApiResponse<UserResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const user = await this.userService.createUser(req.body);
@@ -46,53 +57,40 @@ export class UserController {
                 data: this.transformUserToDto(user)
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '创建用户失败',
-                    error
-                });
-            }
+            next(error);
         }
     };
 
+    /**
+     * 更新用户
+     * PUT /api/v1/users/admin/:id 或 PUT /api/v1/users/profile
+     */
     updateUser = async (
         req: Request<{ id: string }, ApiResponse<UserResponseDto>, UpdateUserDto>,
-        res: Response<ApiResponse<UserResponseDto>>
+        res: Response<ApiResponse<UserResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
-            const user = await this.userService.updateUser(req.params.id, req.body);
+            const userId = req.params.id || (req.user?.id as string);
+            const user = await this.userService.updateUser(userId, req.body);
             res.json({
                 code: 0,
                 message: '更新用户成功',
                 data: this.transformUserToDto(user)
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '更新用户失败',
-                    error
-                });
-            }
+            next(error);
         }
     };
 
+    /**
+     * 删除用户
+     * DELETE /api/v1/users/admin/:id
+     */
     deleteUser = async (
         req: Request<{ id: string }>,
-        res: Response<ApiResponse<null>>
+        res: Response<ApiResponse<null>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             await this.userService.deleteUser(req.params.id);
@@ -102,53 +100,40 @@ export class UserController {
                 data: null
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '删除用户失败',
-                    error
-                });
-            }
+            next(error);
         }
     };
 
+    /**
+     * 获取用户信息
+     * GET /api/v1/users/admin/:id 或 GET /api/v1/users/profile
+     */
     getUser = async (
         req: Request<{ id: string }>,
-        res: Response<ApiResponse<UserResponseDto>>
+        res: Response<ApiResponse<UserResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
-            const user = await this.userService.getUser(req.params.id);
+            const userId = req.params.id || (req.user?.id as string);
+            const user = await this.userService.getUser(userId);
             res.json({
                 code: 0,
                 message: 'success',
                 data: this.transformUserToDto(user)
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '获取用户信息失败',
-                    error
-                });
-            }
+            next(error);
         }
     };
 
+    /**
+     * 获取用户列表
+     * GET /api/v1/users/admin
+     */
     getUsers = async (
         req: Request<{}, ApiResponse<UserListResponseDto>, {}, UserQueryDto>,
-        res: Response<ApiResponse<UserListResponseDto>>
+        res: Response<ApiResponse<UserListResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const { users, total } = await this.userService.getUsers(req.query);
@@ -167,19 +152,7 @@ export class UserController {
                 }
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '获取用户列表失败',
-                    error
-                });
-            }
+            next(error);
         }
     };
 } 

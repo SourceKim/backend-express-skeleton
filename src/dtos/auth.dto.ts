@@ -27,7 +27,6 @@ export interface RegisterResponseDto {
     avatar?: string;
     bio?: string;
     status: UserStatus;
-    is_active: boolean;
     created_at: Date;
     updated_at: Date;
     roles: Array<{
@@ -49,7 +48,6 @@ export interface LoginResponseDto {
         avatar?: string;
         bio?: string;
         status: UserStatus;
-        is_active: boolean;
         roles: Array<{
             id: string;
             name: string;
@@ -68,7 +66,6 @@ export interface ProfileResponseDto {
     avatar?: string;
     bio?: string;
     status: UserStatus;
-    is_active: boolean;
     created_at: Date;
     updated_at: Date;
     roles: Array<{

@@ -48,7 +48,6 @@ export class UserService {
             ...rest,
             roles,
             status: UserStatus.ACTIVE,
-            isActive: true
         });
 
         // 保存用户
@@ -111,7 +110,6 @@ export class UserService {
             username,
             email,
             status,
-            is_active
         } = query;
 
         const queryBuilder = this.userRepository.createQueryBuilder('user')
@@ -127,9 +125,6 @@ export class UserService {
         }
         if (status) {
             queryBuilder.andWhere('user.status = :status', { status });
-        }
-        if (is_active !== undefined) {
-            queryBuilder.andWhere('user.isActive = :isActive', { isActive: is_active });
         }
 
         // 分页

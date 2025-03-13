@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '@/services/auth.service';
 import { HttpException } from '@/exceptions/http.exception';
 import { ApiResponse } from '@/dtos/common.dto';
@@ -11,6 +11,10 @@ import {
 } from '@/dtos/auth.dto';
 import { logInfo, logError, logDebug } from '@/utils/logger';
 
+/**
+ * 认证控制器
+ * 处理用户注册、登录和获取个人信息
+ */
 export class AuthController {
     private authService: AuthService;
 
@@ -19,6 +23,9 @@ export class AuthController {
         logInfo('AuthController 初始化');
     }
 
+    /**
+     * 将用户实体转换为DTO
+     */
     private transformUserToDto(user: any): RegisterResponseDto {
         return {
             id: user.id,
@@ -29,16 +36,20 @@ export class AuthController {
             avatar: user.avatar,
             bio: user.bio,
             status: user.status,
-            is_active: user.isActive,
             created_at: user.created_at,
             updated_at: user.updated_at,
             roles: user.roles || []
         };
     }
 
+    /**
+     * 用户注册
+     * POST /api/auth/register
+     */
     register = async (
         req: Request<{}, ApiResponse<RegisterResponseDto>, RegisterDto>, 
-        res: Response<ApiResponse<RegisterResponseDto>>
+        res: Response<ApiResponse<RegisterResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const { username, password, email, phone, nickname, avatar, bio } = req.body;
@@ -87,26 +98,18 @@ export class AuthController {
             });
         } catch (error) {
             logError('用户注册失败', (req as any).requestId, { error, body: req.body });
-            
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '注册失败',
-                    error
-                });
-            }
+            next(error);
         }
     };
 
+    /**
+     * 用户登录
+     * POST /api/auth/login
+     */
     login = async (
         req: Request<{}, ApiResponse<LoginResponseDto>, LoginDto>,
-        res: Response<ApiResponse<LoginResponseDto>>
+        res: Response<ApiResponse<LoginResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const { username, password } = req.body;
@@ -131,26 +134,18 @@ export class AuthController {
             });
         } catch (error) {
             logError('用户登录失败', (req as any).requestId, { error, username: req.body.username });
-            
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '登录失败',
-                    error
-                });
-            }
+            next(error);
         }
     };
 
+    /**
+     * 获取用户个人信息
+     * GET /api/auth/profile
+     */
     getProfile = async (
         req: Request<{}, ApiResponse<ProfileResponseDto>, {}>,
-        res: Response<ApiResponse<ProfileResponseDto>>
+        res: Response<ApiResponse<ProfileResponseDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             // 使用类型断言访问 user
@@ -166,19 +161,7 @@ export class AuthController {
                 data: this.transformUserToDto(user)
             });
         } catch (error) {
-            if (error instanceof HttpException) {
-                res.status(error.status).json({
-                    code: error.status,
-                    message: error.message,
-                    error: error.error
-                });
-            } else {
-                res.status(500).json({
-                    code: 500,
-                    message: '获取用户信息失败',
-                    error
-                });
-            }
+            next(error);
         }
     };
 } 

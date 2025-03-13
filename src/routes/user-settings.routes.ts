@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { UserSettingsController } from '../controllers/user-settings.controller';
+import { UserSettingsController } from '@/controllers/user-settings.controller';
 import { authMiddleware } from '@/middlewares/auth.middleware';
 import { adminMiddleware } from '@/middlewares/admin.middleware';
 

@@ -6,18 +6,22 @@ import { AddToCartDto, UpdateCartDto } from '@/dtos/cart.dto';
 import { HttpException } from '@/exceptions/HttpException';
 import { ApiResponse } from '@/dtos/common.dto';
 
+/**
+ * 购物车控制器
+ * 处理购物车相关的请求
+ */
 export class CartController {
   private cartService = new CartService();
 
+  /**
+   * 获取用户购物车
+   * GET /api/v1/cart
+   */
   public getUserCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       
       const cartItems = await this.cartService.findUserCart(userId);
@@ -31,15 +35,15 @@ export class CartController {
     }
   };
 
+  /**
+   * 添加商品到购物车
+   * POST /api/v1/cart
+   */
   public addToCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       
       // 手动验证请求数据
@@ -51,11 +55,7 @@ export class CartController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({
-          code: 400,
-          message
-        });
-        return;
+        throw new HttpException(400, message);
       }
       
       const cartItem = await this.cartService.addToCart(userId, req.body);
@@ -69,15 +69,15 @@ export class CartController {
     }
   };
 
+  /**
+   * 更新购物车商品
+   * PUT /api/v1/cart/:id
+   */
   public updateCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       
       const cartId = req.params.id;
@@ -91,11 +91,7 @@ export class CartController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({
-          code: 400,
-          message
-        });
-        return;
+        throw new HttpException(400, message);
       }
       
       const updatedCart = await this.cartService.updateCart(cartId, userId, req.body);
@@ -109,15 +105,15 @@ export class CartController {
     }
   };
 
+  /**
+   * 从购物车移除商品
+   * DELETE /api/v1/cart/:id
+   */
   public removeFromCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       
       const cartId = req.params.id;
@@ -131,15 +127,15 @@ export class CartController {
     }
   };
 
+  /**
+   * 清空购物车
+   * DELETE /api/v1/cart
+   */
   public clearCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       
       await this.cartService.clearUserCart(userId);
@@ -154,6 +150,7 @@ export class CartController {
 
   /**
    * 管理员：获取所有用户的购物车
+   * GET /api/v1/cart/admin/all
    */
   public getAllCarts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -180,6 +177,7 @@ export class CartController {
 
   /**
    * 管理员：获取特定用户的购物车
+   * GET /api/v1/cart/admin/user/:userId
    */
   public getUserCartByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -199,6 +197,7 @@ export class CartController {
 
   /**
    * 管理员：清空特定用户的购物车
+   * DELETE /api/v1/cart/admin/user/:userId
    */
   public clearUserCartByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -217,6 +216,7 @@ export class CartController {
 
   /**
    * 管理员：删除特定购物车项
+   * DELETE /api/v1/cart/admin/:id
    */
   public removeCartItemByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

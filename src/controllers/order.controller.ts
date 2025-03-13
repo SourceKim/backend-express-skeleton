@@ -7,19 +7,23 @@ import { CreateOrderDto, UpdateOrderStatusDto } from '@/dtos/order.dto';
 import { HttpException } from '@/exceptions/HttpException';
 import { ApiResponse } from '@/dtos/common.dto';
 
+/**
+ * 订单控制器
+ * 处理订单相关的请求
+ */
 export class OrderController {
   private orderService = new OrderService();
   private cartService = new CartService();
 
+  /**
+   * 创建订单
+   * POST /api/v1/orders
+   */
   public createOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       
       // 手动验证请求数据
@@ -31,22 +35,14 @@ export class OrderController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({
-          code: 400,
-          message
-        });
-        return;
+        throw new HttpException(400, message);
       }
       
       // 获取用户购物车
       const cartItems = await this.cartService.findUserCart(userId);
       
       if (cartItems.length === 0) {
-        res.status(400).json({
-          code: 400,
-          message: '购物车为空，无法创建订单'
-        });
-        return;
+        throw new HttpException(400, '购物车为空，无法创建订单');
       }
       
       // 创建订单
@@ -65,15 +61,15 @@ export class OrderController {
     }
   };
 
+  /**
+   * 获取用户订单列表
+   * GET /api/v1/orders
+   */
   public getOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       const orders = await this.orderService.findUserOrders(userId);
       res.status(200).json({
@@ -86,15 +82,15 @@ export class OrderController {
     }
   };
 
+  /**
+   * 获取订单详情
+   * GET /api/v1/orders/:id
+   */
   public getOrderById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       const orderId = req.params.id;
       const order = await this.orderService.findOrderById(orderId, userId);
@@ -108,15 +104,15 @@ export class OrderController {
     }
   };
 
+  /**
+   * 更新订单状态
+   * PUT /api/v1/orders/:id/status
+   */
   public updateOrderStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({
-          code: 401,
-          message: '未授权'
-        });
-        return;
+        throw new HttpException(401, '未授权');
       }
       const orderId = req.params.id;
       
@@ -129,11 +125,7 @@ export class OrderController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({
-          code: 400,
-          message
-        });
-        return;
+        throw new HttpException(400, message);
       }
       
       const order = await this.orderService.updateOrderStatus(orderId, userId, req.body);
@@ -149,6 +141,7 @@ export class OrderController {
 
   /**
    * 管理员：获取所有订单
+   * GET /api/v1/orders/admin/all
    */
   public getAllOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -175,6 +168,7 @@ export class OrderController {
 
   /**
    * 管理员：按条件筛选订单
+   * GET /api/v1/orders/admin/filter
    */
   public filterOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -210,6 +204,7 @@ export class OrderController {
 
   /**
    * 管理员：更新订单信息
+   * PUT /api/v1/orders/admin/:id
    */
   public updateOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -230,6 +225,7 @@ export class OrderController {
 
   /**
    * 管理员：删除订单
+   * DELETE /api/v1/orders/admin/:id
    */
   public deleteOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -248,10 +244,14 @@ export class OrderController {
 
   /**
    * 管理员：获取订单统计数据
+   * GET /api/v1/orders/admin/statistics
    */
   public getOrderStatistics = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const statistics = await this.orderService.getOrderStatistics();
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+      
+      const statistics = await this.orderService.getOrderStatistics(startDate, endDate);
       
       res.status(200).json({
         code: 0,
@@ -265,17 +265,19 @@ export class OrderController {
 
   /**
    * 管理员：处理订单退款
+   * POST /api/v1/orders/admin/:id/refund
    */
   public refundOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orderId = req.params.id;
+      const { reason, amount } = req.body;
       
-      const updatedOrder = await this.orderService.refundOrder(orderId);
+      const refundResult = await this.orderService.refundOrder(orderId, reason, amount);
       
       res.status(200).json({
         code: 0,
-        message: '订单已退款并取消',
-        data: updatedOrder
+        message: '订单退款处理成功',
+        data: refundResult
       });
     } catch (error) {
       next(error);

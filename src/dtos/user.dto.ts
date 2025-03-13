@@ -62,10 +62,6 @@ export class UpdateUserDto {
     status?: UserStatus;
 
     @IsOptional()
-    @IsBoolean()
-    isActive?: boolean;
-
-    @IsOptional()
     @IsArray()
     @IsString({ each: true })
     roles?: string[];
@@ -81,7 +77,6 @@ export interface UserResponseDto {
     avatar?: string;
     status: UserStatus;
     bio?: string;
-    is_active: boolean;
     created_at: Date;
     updated_at: Date;
     roles: Array<{
@@ -104,10 +99,6 @@ export class UserQueryDto {
     @IsOptional()
     @IsEnum(UserStatus, { message: '用户状态不正确' })
     status?: UserStatus;
-
-    @IsOptional()
-    @IsBoolean()
-    is_active?: boolean;
 
     @IsOptional()
     page?: number;

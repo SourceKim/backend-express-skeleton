@@ -1,13 +1,13 @@
-import { PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
-import { IsUUID, IsDate, IsOptional } from 'class-validator';
+import { PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { IsString, IsDate, IsOptional } from 'class-validator';
 
 /**
  * 基础模型类
  * 包含所有模型共有的字段和方法
  */
 export abstract class BaseEntity {
-    @PrimaryGeneratedColumn('uuid')
-    @IsUUID()
+    @PrimaryColumn({ type: 'varchar', length: 36 })
+    @IsString()
     id!: string;
 
     @CreateDateColumn({ type: 'timestamp', name: 'created_at' })

@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
-import { IsString, IsNumber, IsNotEmpty, Min, IsEnum, IsArray, ValidateNested, IsObject } from 'class-validator';
+import { IsString, IsNumber, IsNotEmpty, Min, IsEnum, IsArray, ValidateNested, IsObject, IsDate, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { User } from './user.model';
 import { BaseEntity } from './base.model';  
@@ -42,6 +42,19 @@ class OrderAddress {
   address!: string;
 }
 
+class RefundInfo {
+  @IsDate()
+  refunded_at!: Date;
+
+  @IsString()
+  @IsNotEmpty()
+  reason!: string;
+
+  @IsNumber()
+  @Min(0)
+  amount!: number;
+}
+
 @Entity('orders')
 export class Order extends BaseEntity {
   @Column()
@@ -78,6 +91,13 @@ export class Order extends BaseEntity {
   @ValidateNested()
   @Type(() => OrderAddress)
   address!: OrderAddress;
+
+  @Column('json', { nullable: true })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => RefundInfo)
+  refund_info?: RefundInfo;
 
   constructor(partial: Partial<Order> = {}) {
     super(partial);

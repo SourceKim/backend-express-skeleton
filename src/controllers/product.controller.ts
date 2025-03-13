@@ -6,9 +6,17 @@ import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDt
 import { HttpException } from '@/exceptions/HttpException';
 import { ApiResponse } from '@/dtos/common.dto';
 
+/**
+ * 产品控制器
+ * 处理产品和分类相关的请求
+ */
 export class ProductController {
   private productService = new ProductService();
 
+  /**
+   * 获取产品列表
+   * GET /api/v1/products
+   */
   public getProducts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const page = parseInt(req.query.page as string) || 1;
@@ -32,6 +40,10 @@ export class ProductController {
     }
   };
 
+  /**
+   * 获取产品详情
+   * GET /api/v1/products/:id
+   */
   public getProductById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const productId = req.params.id;
@@ -46,6 +58,10 @@ export class ProductController {
     }
   };
 
+  /**
+   * 获取所有产品分类
+   * GET /api/v1/products/categories
+   */
   public getCategories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const categories = await this.productService.findAllCategories();
@@ -59,6 +75,10 @@ export class ProductController {
     }
   };
 
+  /**
+   * 创建产品
+   * POST /api/v1/products/admin/products
+   */
   public createProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // 手动验证请求数据
@@ -70,19 +90,26 @@ export class ProductController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({ message });
-        return;
+        throw new HttpException(400, message);
       }
       
       // 转换为正确的类型
       const productData = req.body as unknown as CreateProductDto;
       const newProduct = await this.productService.createProduct(productData);
-      res.status(201).json({ data: newProduct, message: '产品创建成功' });
+      res.status(201).json({
+        code: 0,
+        message: '产品创建成功',
+        data: newProduct
+      });
     } catch (error) {
       next(error);
     }
   };
 
+  /**
+   * 更新产品
+   * PUT /api/v1/products/admin/products/:id
+   */
   public updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const productId = req.params.id;
@@ -96,30 +123,43 @@ export class ProductController {
           .map(error => Object.values(error.constraints || {}))
           .flat()
           .join(', ');
-        res.status(400).json({ message });
-        return;
+        throw new HttpException(400, message);
       }
       
       // 转换为正确的类型
       const productData = req.body as unknown as UpdateProductDto;
       const updatedProduct = await this.productService.updateProduct(productId, productData);
-      res.status(200).json({ data: updatedProduct, message: '产品更新成功' });
+      res.status(200).json({
+        code: 0,
+        message: '产品更新成功',
+        data: updatedProduct
+      });
     } catch (error) {
       next(error);
     }
   };
 
+  /**
+   * 删除产品
+   * DELETE /api/v1/products/admin/products/:id
+   */
   public deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const productId = req.params.id;
       await this.productService.deleteProduct(productId);
-      res.status(200).json({ message: '产品删除成功' });
+      res.status(200).json({
+        code: 0,
+        message: '产品删除成功'
+      });
     } catch (error) {
       next(error);
     }
   };
 
-  // 管理员分类相关方法
+  /**
+   * 创建产品分类
+   * POST /api/v1/products/admin/categories
+   */
   public createCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // 修复类型错误，确保 categoryDto 是单个对象而不是数组
@@ -146,6 +186,10 @@ export class ProductController {
     }
   };
 
+  /**
+   * 更新产品分类
+   * PUT /api/v1/products/admin/categories/:id
+   */
   public updateCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const categoryId = req.params.id;
@@ -173,6 +217,10 @@ export class ProductController {
     }
   };
 
+  /**
+   * 删除产品分类
+   * DELETE /api/v1/products/admin/categories/:id
+   */
   public deleteCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const categoryId = req.params.id;
@@ -186,6 +234,10 @@ export class ProductController {
     }
   };
 
+  /**
+   * 获取产品分类详情
+   * GET /api/v1/products/categories/:id
+   */
   public getCategoryById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const categoryId = req.params.id;
