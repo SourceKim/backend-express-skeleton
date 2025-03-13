@@ -84,62 +84,49 @@ export class MaterialController {
      * 上传素材文件
      * POST /api/v1/materials/upload
      */
-    public uploadMaterial = async (req: any, res: Response<ApiResponse<MaterialDto>>): Promise<void> => {
+    public uploadMaterial = async (req: any, res: Response<ApiResponse<MaterialDto>>, next: NextFunction): Promise<void> => {
         try {
             // 使用multer中间件处理文件上传
             this.upload.single('file')(req, res, async (err) => {
-                if (err) {
-                    if (err instanceof multer.MulterError) {
-                        if (err.code === 'LIMIT_FILE_SIZE') {
-                            res.status(400).json({
-                                code: 400,
-                                message: `文件大小超过限制 (${ENV.MAX_FILE_SIZE / 1024 / 1024}MB)`
-                            });
-                            return;
+                try {
+                    if (err) {
+                        if (err instanceof multer.MulterError) {
+                            if (err.code === 'LIMIT_FILE_SIZE') {
+                                throw new HttpException(400, `文件大小超过限制 (${ENV.MAX_FILE_SIZE / 1024 / 1024}MB)`);
+                            }
                         }
+                        throw new HttpException(400, '文件上传失败', err.message);
                     }
-                    res.status(400).json({
-                        code: 400,
-                        message: '文件上传失败',
-                        error: err.message
+
+                    if (!req.file) {
+                        throw new HttpException(400, '未提供文件');
+                    }
+
+                    // 从请求体中获取其他素材信息
+                    const materialData: CreateMaterialDto = {
+                        category: req.body.category,
+                        description: req.body.description,
+                        is_public: req.body.is_public === 'true',
+                        tags: req.body.tags ? JSON.parse(req.body.tags) : undefined,
+                        metadata: req.body.metadata ? JSON.parse(req.body.metadata) : undefined,
+                        parent_id: req.body.parent_id
+                    };
+
+                    // 上传文件并创建素材记录
+                    const material = await this.materialService.uploadFile(req.file, req.user, materialData);
+
+                    // 返回创建的素材信息
+                    res.status(201).json({
+                        code: 0,
+                        message: '素材上传成功',
+                        data: this.transformToDto(material)
                     });
-                    return;
+                } catch (error) {
+                    next(error);
                 }
-
-                if (!req.file) {
-                    res.status(400).json({
-                        code: 400,
-                        message: '未提供文件'
-                    });
-                    return;
-                }
-
-                // 从请求体中获取其他素材信息
-                const materialData: CreateMaterialDto = {
-                    category: req.body.category,
-                    description: req.body.description,
-                    is_public: req.body.is_public === 'true',
-                    tags: req.body.tags ? JSON.parse(req.body.tags) : undefined,
-                    metadata: req.body.metadata ? JSON.parse(req.body.metadata) : undefined,
-                    parent_id: req.body.parent_id
-                };
-
-                // 上传文件并创建素材记录
-                const material = await this.materialService.uploadFile(req.file, req.user, materialData);
-
-                // 返回创建的素材信息
-                res.status(201).json({
-                    code: 0,
-                    message: '素材上传成功',
-                    data: this.transformToDto(material)
-                });
             });
         } catch (error) {
-            console.error('上传素材失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '上传素材失败'
-            });
+            next(error);
         }
     };
 
@@ -147,73 +134,56 @@ export class MaterialController {
      * 批量上传素材文件
      * POST /api/v1/materials/upload/batch
      */
-    public uploadMaterialsBatch = async (req: any, res: Response<ApiResponse<MaterialDto[]>>): Promise<void> => {
+    public uploadMaterialsBatch = async (req: any, res: Response<ApiResponse<MaterialDto[]>>, next: NextFunction): Promise<void> => {
         try {
             // 使用multer中间件处理多文件上传
             this.upload.array('files', 10)(req, res, async (err) => {
-                if (err) {
-                    if (err instanceof multer.MulterError) {
-                        if (err.code === 'LIMIT_FILE_SIZE') {
-                            res.status(400).json({
-                                code: 400,
-                                message: `文件大小超过限制 (${ENV.MAX_FILE_SIZE / 1024 / 1024}MB)`
-                            });
-                            return;
+                try {
+                    if (err) {
+                        if (err instanceof multer.MulterError) {
+                            if (err.code === 'LIMIT_FILE_SIZE') {
+                                throw new HttpException(400, `文件大小超过限制 (${ENV.MAX_FILE_SIZE / 1024 / 1024}MB)`);
+                            }
+                            if (err.code === 'LIMIT_FILE_COUNT') {
+                                throw new HttpException(400, '文件数量超过限制');
+                            }
                         }
-                        if (err.code === 'LIMIT_FILE_COUNT') {
-                            res.status(400).json({
-                                code: 400,
-                                message: '文件数量超过限制'
-                            });
-                            return;
-                        }
+                        throw new HttpException(400, '文件上传失败', err.message);
                     }
-                    res.status(400).json({
-                        code: 400,
-                        message: '文件上传失败',
-                        error: err.message
+
+                    if (!req.files || req.files.length === 0) {
+                        throw new HttpException(400, '未提供文件');
+                    }
+
+                    // 从请求体中获取其他素材信息
+                    const materialData: CreateMaterialDto = {
+                        category: req.body.category,
+                        description: req.body.description,
+                        is_public: req.body.is_public === 'true',
+                        tags: req.body.tags ? JSON.parse(req.body.tags) : undefined,
+                        metadata: req.body.metadata ? JSON.parse(req.body.metadata) : undefined,
+                        parent_id: req.body.parent_id
+                    };
+
+                    // 上传所有文件并创建素材记录
+                    const uploadPromises = (req.files as Express.Multer.File[]).map(file => 
+                        this.materialService.uploadFile(file, req.user, materialData)
+                    );
+
+                    const materials = await Promise.all(uploadPromises);
+
+                    // 返回创建的素材信息
+                    res.status(201).json({
+                        code: 0,
+                        message: '素材批量上传成功',
+                        data: materials.map(material => this.transformToDto(material))
                     });
-                    return;
+                } catch (error) {
+                    next(error);
                 }
-
-                if (!req.files || req.files.length === 0) {
-                    res.status(400).json({
-                        code: 400,
-                        message: '未提供文件'
-                    });
-                    return;
-                }
-
-                // 从请求体中获取其他素材信息
-                const materialData: CreateMaterialDto = {
-                    category: req.body.category,
-                    description: req.body.description,
-                    is_public: req.body.is_public === 'true',
-                    tags: req.body.tags ? JSON.parse(req.body.tags) : undefined,
-                    metadata: req.body.metadata ? JSON.parse(req.body.metadata) : undefined,
-                    parent_id: req.body.parent_id
-                };
-
-                // 上传所有文件并创建素材记录
-                const uploadPromises = (req.files as Express.Multer.File[]).map(file => 
-                    this.materialService.uploadFile(file, req.user, materialData)
-                );
-
-                const materials = await Promise.all(uploadPromises);
-
-                // 返回创建的素材信息
-                res.status(201).json({
-                    code: 0,
-                    message: '素材批量上传成功',
-                    data: materials.map(material => this.transformToDto(material))
-                });
             });
         } catch (error) {
-            console.error('批量上传素材失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '批量上传素材失败'
-            });
+            next(error);
         }
     };
 
@@ -223,7 +193,8 @@ export class MaterialController {
      */
     public createTextMaterial = async (
         req: Request, 
-        res: Response<ApiResponse<MaterialDto>>
+        res: Response<ApiResponse<MaterialDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const materialData: CreateTextMaterialDto = req.body;
@@ -245,11 +216,7 @@ export class MaterialController {
                 data: this.transformToDto(material)
             });
         } catch (error) {
-            console.error('创建文本素材失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '创建文本素材失败'
-            });
+            next(error);
         }
     };
 
@@ -259,7 +226,8 @@ export class MaterialController {
      */
     public getMaterials = async (
         req: Request, 
-        res: Response<ApiResponse<PaginatedMaterialsResponse>>
+        res: Response<ApiResponse<PaginatedMaterialsResponse>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const query: GetMaterialsQueryDto = req.query as any;
@@ -333,11 +301,7 @@ export class MaterialController {
                 data: response
             });
         } catch (error) {
-            console.error('获取素材列表失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '获取素材列表失败'
-            });
+            next(error);
         }
     };
 
@@ -347,7 +311,8 @@ export class MaterialController {
      */
     public getMaterialById = async (
         req: Request, 
-        res: Response<ApiResponse<MaterialDto>>
+        res: Response<ApiResponse<MaterialDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const id = req.params.id;
@@ -362,11 +327,7 @@ export class MaterialController {
                 data: this.transformToDto(material)
             });
         } catch (error) {
-            console.error('获取素材失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '获取素材失败'
-            });
+            next(error);
         }
     };
 
@@ -376,7 +337,8 @@ export class MaterialController {
      */
     public updateMaterial = async (
         req: Request, 
-        res: Response<ApiResponse<MaterialDto>>
+        res: Response<ApiResponse<MaterialDto>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const id = req.params.id;
@@ -392,11 +354,7 @@ export class MaterialController {
                 data: this.transformToDto(material)
             });
         } catch (error) {
-            console.error('更新素材失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '更新素材失败'
-            });
+            next(error);
         }
     };
 
@@ -406,7 +364,8 @@ export class MaterialController {
      */
     public deleteMaterial = async (
         req: Request, 
-        res: Response<ApiResponse<void>>
+        res: Response<ApiResponse<void>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const id = req.params.id;
@@ -420,11 +379,7 @@ export class MaterialController {
                 message: '素材删除成功'
             });
         } catch (error) {
-            console.error('删除素材失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '删除素材失败'
-            });
+            next(error);
         }
     };
 
@@ -434,7 +389,8 @@ export class MaterialController {
      */
     public batchDeleteMaterials = async (
         req: Request, 
-        res: Response<ApiResponse<{ success_count: number; failed_count: number; success_ids: string[]; failed_ids: string[] }>>
+        res: Response<ApiResponse<{ success_count: number; failed_count: number; success_ids: string[]; failed_ids: string[] }>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const { ids }: BatchDeleteMaterialsDto = req.body;
@@ -454,11 +410,7 @@ export class MaterialController {
                 }
             });
         } catch (error) {
-            console.error('批量删除素材失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '批量删除素材失败'
-            });
+            next(error);
         }
     };
 
@@ -468,7 +420,8 @@ export class MaterialController {
      */
     public getRelatedMaterials = async (
         req: Request, 
-        res: Response<ApiResponse<MaterialDto[]>>
+        res: Response<ApiResponse<MaterialDto[]>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const id = req.params.id;
@@ -483,11 +436,7 @@ export class MaterialController {
                 data: materials.map(material => this.transformToDto(material))
             });
         } catch (error) {
-            console.error('获取相关素材失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '获取相关素材失败'
-            });
+            next(error);
         }
     };
 
@@ -497,7 +446,8 @@ export class MaterialController {
      */
     public getMaterialVersions = async (
         req: Request, 
-        res: Response<ApiResponse<MaterialDto[]>>
+        res: Response<ApiResponse<MaterialDto[]>>,
+        next: NextFunction
     ): Promise<void> => {
         try {
             const id = req.params.id;
@@ -512,11 +462,7 @@ export class MaterialController {
                 data: versions.map(version => this.transformToDto(version))
             });
         } catch (error) {
-            console.error('获取素材版本历史失败:', error);
-            res.status(error instanceof HttpException ? error.status : 500).json({
-                code: error instanceof HttpException ? error.status : 500,
-                message: error instanceof HttpException ? error.message : '获取素材版本历史失败'
-            });
+            next(error);
         }
     };
 } 

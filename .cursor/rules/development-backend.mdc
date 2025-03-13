@@ -39,6 +39,8 @@ alwaysApply: false
     * common.docs.ts
     * user.docs.ts
     * user-admin.docs.ts
+    * cart.docs.ts
+    * cart.admin.docs.ts
 
   * controllers/ - 控制器
     * user.controllers.ts

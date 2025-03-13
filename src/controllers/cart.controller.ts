@@ -1,235 +1,198 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
+import { CartService } from '@/services/cart.service';
+import { AddCartItemDto, UpdateCartItemDto } from '@/dtos/cart.dto';
 import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
-import { CartService } from '@/services/cart.service';
-import { AddToCartDto, UpdateCartDto } from '@/dtos/cart.dto';
-import { HttpException } from '@/exceptions/HttpException';
-import { ApiResponse } from '@/dtos/common.dto';
 
-/**
- * 购物车控制器
- * 处理购物车相关的请求
- */
 export class CartController {
   private cartService = new CartService();
 
   /**
    * 获取用户购物车
-   * GET /api/v1/cart
    */
-  public getUserCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getUserCart = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new HttpException(401, '未授权');
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
+        return;
       }
-      
-      const cartItems = await this.cartService.findUserCart(userId);
+
+      const cart = await this.cartService.getUserCart(Number(userId));
       res.status(200).json({
         code: 0,
-        message: '获取购物车成功',
-        data: cartItems
+        data: cart
       });
-    } catch (error) {
-      next(error);
+    } catch (error: any) {
+      res.status(500).json({
+        code: 500,
+        message: error.message || '获取购物车失败',
+        error
+      });
     }
   };
 
   /**
    * 添加商品到购物车
-   * POST /api/v1/cart
    */
-  public addToCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  addCartItem = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new HttpException(401, '未授权');
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
+        return;
       }
-      
-      // 手动验证请求数据
-      const cartDto = plainToClass(AddToCartDto, req.body);
-      const errors = await validate(cartDto);
-      
+
+      const addCartItemDto = plainToClass(AddCartItemDto, req.body);
+      const errors = await validate(addCartItemDto);
+
       if (errors.length > 0) {
-        const message = errors
-          .map(error => Object.values(error.constraints || {}))
-          .flat()
-          .join(', ');
-        throw new HttpException(400, message);
+        res.status(400).json({
+          code: 400,
+          message: '请求参数错误',
+          error: errors
+        });
+        return;
       }
-      
-      const cartItem = await this.cartService.addToCart(userId, req.body);
-      res.status(201).json({
+
+      const cart = await this.cartService.addCartItem(Number(userId), addCartItemDto);
+      res.status(200).json({
         code: 0,
-        message: '商品已添加到购物车',
-        data: cartItem
+        message: '添加商品到购物车成功',
+        data: cart
       });
-    } catch (error) {
-      next(error);
+    } catch (error: any) {
+      res.status(500).json({
+        code: 500,
+        message: error.message || '添加商品到购物车失败',
+        error
+      });
     }
   };
 
   /**
-   * 更新购物车商品
-   * PUT /api/v1/cart/:id
+   * 更新购物车项数量
    */
-  public updateCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateCartItem = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new HttpException(401, '未授权');
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
+        return;
       }
-      
-      const cartId = req.params.id;
-      
-      // 手动验证请求数据
-      const cartDto = plainToClass(UpdateCartDto, req.body);
-      const errors = await validate(cartDto);
-      
+
+      const itemId = Number(req.params.id);
+      const updateCartItemDto = plainToClass(UpdateCartItemDto, req.body);
+      const errors = await validate(updateCartItemDto);
+
       if (errors.length > 0) {
-        const message = errors
-          .map(error => Object.values(error.constraints || {}))
-          .flat()
-          .join(', ');
-        throw new HttpException(400, message);
+        res.status(400).json({
+          code: 400,
+          message: '请求参数错误',
+          error: errors
+        });
+        return;
       }
-      
-      const updatedCart = await this.cartService.updateCart(cartId, userId, req.body);
+
+      const cart = await this.cartService.updateCartItem(Number(userId), itemId, updateCartItemDto);
       res.status(200).json({
         code: 0,
-        message: '购物车已更新',
-        data: updatedCart
+        message: '更新购物车项数量成功',
+        data: cart
       });
-    } catch (error) {
-      next(error);
+    } catch (error: any) {
+      res.status(500).json({
+        code: 500,
+        message: error.message || '更新购物车项数量失败',
+        error
+      });
     }
   };
 
   /**
-   * 从购物车移除商品
-   * DELETE /api/v1/cart/:id
+   * 移除购物车项
    */
-  public removeFromCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  removeCartItem = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new HttpException(401, '未授权');
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
+        return;
       }
-      
-      const cartId = req.params.id;
-      await this.cartService.removeFromCart(cartId, userId);
+
+      const itemId = Number(req.params.id);
+      const cart = await this.cartService.removeCartItem(Number(userId), itemId);
       res.status(200).json({
         code: 0,
-        message: '商品已从购物车移除'
+        message: '移除购物车项成功',
+        data: cart
       });
-    } catch (error) {
-      next(error);
+    } catch (error: any) {
+      res.status(500).json({
+        code: 500,
+        message: error.message || '移除购物车项失败',
+        error
+      });
     }
   };
 
   /**
    * 清空购物车
-   * DELETE /api/v1/cart
    */
-  public clearCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  clearCart = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new HttpException(401, '未授权');
+        res.status(401).json({
+          code: 401,
+          message: '未授权'
+        });
+        return;
       }
-      
-      await this.cartService.clearUserCart(userId);
+
+      const cart = await this.cartService.clearCart(Number(userId));
       res.status(200).json({
         code: 0,
-        message: '购物车已清空'
+        message: '清空购物车成功',
+        data: cart
       });
-    } catch (error) {
-      next(error);
+    } catch (error: any) {
+      res.status(500).json({
+        code: 500,
+        message: error.message || '清空购物车失败',
+        error
+      });
     }
   };
 
   /**
-   * 管理员：获取所有用户的购物车
-   * GET /api/v1/cart/admin/all
+   * 获取所有用户的购物车（管理员）
    */
-  public getAllCarts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getAllCarts = async (req: Request, res: Response): Promise<void> => {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      
-      const { carts, total } = await this.cartService.findAllCarts(page, limit);
-      
-      res.status(200).json({
-        code: 0,
-        message: '获取所有购物车成功',
-        data: {
-          items: carts,
-          total,
-          page,
-          limit,
-          total_pages: Math.ceil(total / limit)
-        }
+      // 这个功能通常不需要，但如果需要审计可以实现
+      res.status(501).json({
+        code: 501,
+        message: '功能未实现'
       });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * 管理员：获取特定用户的购物车
-   * GET /api/v1/cart/admin/user/:userId
-   */
-  public getUserCartByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const userId = req.params.userId;
-      
-      const carts = await this.cartService.findUserCartByAdmin(userId);
-      
-      res.status(200).json({
-        code: 0,
-        message: '获取用户购物车成功',
-        data: carts
+    } catch (error: any) {
+      res.status(500).json({
+        code: 500,
+        message: error.message || '获取所有购物车失败',
+        error
       });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * 管理员：清空特定用户的购物车
-   * DELETE /api/v1/cart/admin/user/:userId
-   */
-  public clearUserCartByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const userId = req.params.userId;
-      
-      await this.cartService.clearUserCartByAdmin(userId);
-      
-      res.status(200).json({
-        code: 0,
-        message: '用户购物车已清空'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * 管理员：删除特定购物车项
-   * DELETE /api/v1/cart/admin/:id
-   */
-  public removeCartItemByAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const cartId = req.params.id;
-      
-      await this.cartService.removeCartItemByAdmin(cartId);
-      
-      res.status(200).json({
-        code: 0,
-        message: '购物车项已删除'
-      });
-    } catch (error) {
-      next(error);
     }
   };
 } 

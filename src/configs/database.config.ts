@@ -7,8 +7,8 @@ import { UserSettings } from '@/models/user-settings.model';
 import { Permission } from '@/models/permission.model';
 import { Role } from '@/models/role.model';
 import { Category, Product } from '@/models/product.model';
-import { Order } from '@/models/order.model';
-import { Cart } from '@/models/cart.model';
+import { Order, OrderItem } from '@/models/order.model';
+import { Cart, CartItem } from '@/models/cart.model';
 import { Material } from '@/models/material.model';
 
 export const AppDataSource = new DataSource({
@@ -28,7 +28,9 @@ export const AppDataSource = new DataSource({
         Product,
         Category,
         Order,
+        OrderItem,
         Cart,
+        CartItem,
         Material
     ],
     migrations: ['migrations/*.ts'],

@@ -1,56 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
+import { ProductService } from '@/services/product.service';
+import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDto, ProductQueryDto } from '@/dtos/product.dto';
+import { PaginationQueryDto } from '@/dtos/common.dto';
 import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
-import { ProductService } from '@/services/product.service';
-import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDto } from '@/dtos/product.dto';
-import { HttpException } from '@/exceptions/HttpException';
-import { ApiResponse } from '@/dtos/common.dto';
+import { HttpException } from '@/exceptions/http.exception';
 
-/**
- * 产品控制器
- * 处理产品和分类相关的请求
- */
 export class ProductController {
   private productService = new ProductService();
 
   /**
-   * 获取产品列表
-   * GET /api/v1/products
+   * 创建商品
    */
-  public getProducts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  createProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const categoryId = req.query.category_id as string;
-      
-      const products = await this.productService.findAllProducts(page, limit, categoryId);
-      res.status(200).json({
-        code: 0,
-        message: '获取产品列表成功',
-        data: {
-          items: products.products,
-          total: products.total,
-          page,
-          limit,
-          total_pages: Math.ceil(products.total / limit)
-        }
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
+      const createProductDto = plainToClass(CreateProductDto, req.body);
+      const errors = await validate(createProductDto);
 
-  /**
-   * 获取产品详情
-   * GET /api/v1/products/:id
-   */
-  public getProductById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const productId = req.params.id;
-      const product = await this.productService.findProductById(productId);
-      res.status(200).json({
+      if (errors.length > 0) {
+        throw new HttpException(400, '请求参数错误', errors);
+      }
+
+      const product = await this.productService.createProduct(createProductDto);
+      res.status(201).json({
         code: 0,
-        message: '获取产品详情成功',
+        message: '创建商品成功',
         data: product
       });
     } catch (error) {
@@ -59,16 +33,23 @@ export class ProductController {
   };
 
   /**
-   * 获取所有产品分类
-   * GET /api/v1/products/categories
+   * 更新商品
    */
-  public getCategories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const categories = await this.productService.findAllCategories();
+      const id = Number(req.params.id);
+      const updateProductDto = plainToClass(UpdateProductDto, req.body);
+      const errors = await validate(updateProductDto);
+
+      if (errors.length > 0) {
+        throw new HttpException(400, '请求参数错误', errors);
+      }
+
+      const product = await this.productService.updateProduct(id, updateProductDto);
       res.status(200).json({
         code: 0,
-        message: '获取产品分类成功',
-        data: categories
+        message: '更新商品成功',
+        data: product
       });
     } catch (error) {
       next(error);
@@ -76,63 +57,15 @@ export class ProductController {
   };
 
   /**
-   * 创建产品
-   * POST /api/v1/products/admin/products
+   * 删除商品
    */
-  public createProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // 手动验证请求数据
-      const productDto = plainToClass(CreateProductDto, req.body);
-      const errors = await validate(productDto);
-      
-      if (errors.length > 0) {
-        const message = errors
-          .map(error => Object.values(error.constraints || {}))
-          .flat()
-          .join(', ');
-        throw new HttpException(400, message);
-      }
-      
-      // 转换为正确的类型
-      const productData = req.body as unknown as CreateProductDto;
-      const newProduct = await this.productService.createProduct(productData);
-      res.status(201).json({
-        code: 0,
-        message: '产品创建成功',
-        data: newProduct
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * 更新产品
-   * PUT /api/v1/products/admin/products/:id
-   */
-  public updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const productId = req.params.id;
-      
-      // 手动验证请求数据
-      const productDto = plainToClass(UpdateProductDto, req.body);
-      const errors = await validate(productDto);
-      
-      if (errors.length > 0) {
-        const message = errors
-          .map(error => Object.values(error.constraints || {}))
-          .flat()
-          .join(', ');
-        throw new HttpException(400, message);
-      }
-      
-      // 转换为正确的类型
-      const productData = req.body as unknown as UpdateProductDto;
-      const updatedProduct = await this.productService.updateProduct(productId, productData);
+      const id = Number(req.params.id);
+      await this.productService.deleteProduct(id);
       res.status(200).json({
         code: 0,
-        message: '产品更新成功',
-        data: updatedProduct
+        message: '删除商品成功'
       });
     } catch (error) {
       next(error);
@@ -140,16 +73,15 @@ export class ProductController {
   };
 
   /**
-   * 删除产品
-   * DELETE /api/v1/products/admin/products/:id
+   * 获取单个商品
    */
-  public deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getProductById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const productId = req.params.id;
-      await this.productService.deleteProduct(productId);
+      const id = Number(req.params.id);
+      const product = await this.productService.getProductById(id);
       res.status(200).json({
         code: 0,
-        message: '产品删除成功'
+        data: product
       });
     } catch (error) {
       next(error);
@@ -157,29 +89,44 @@ export class ProductController {
   };
 
   /**
-   * 创建产品分类
-   * POST /api/v1/products/admin/categories
+   * 获取商品列表
    */
-  public createCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getProducts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // 修复类型错误，确保 categoryDto 是单个对象而不是数组
-      const categoryData = req.body;
-      const categoryDto = new CreateCategoryDto(categoryData);
-      const errors = await validate(categoryDto);
-      
+      const queryDto = plainToClass(ProductQueryDto, req.query);
+      const errors = await validate(queryDto);
+
       if (errors.length > 0) {
-        const message = errors
-          .map(error => Object.values(error.constraints || {}))
-          .flat()
-          .join(', ');
-        throw new HttpException(400, message);
+        throw new HttpException(400, '请求参数错误', errors);
       }
-      
-      const newCategory = await this.productService.createCategory(categoryDto);
+
+      const products = await this.productService.getProducts(queryDto);
+      res.status(200).json({
+        code: 0,
+        data: products
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * 创建商品分类
+   */
+  createCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const createCategoryDto = plainToClass(CreateCategoryDto, req.body);
+      const errors = await validate(createCategoryDto);
+
+      if (errors.length > 0) {
+        throw new HttpException(400, '请求参数错误', errors);
+      }
+
+      const category = await this.productService.createCategory(createCategoryDto);
       res.status(201).json({
         code: 0,
         message: '创建分类成功',
-        data: newCategory
+        data: category
       });
     } catch (error) {
       next(error);
@@ -187,30 +134,23 @@ export class ProductController {
   };
 
   /**
-   * 更新产品分类
-   * PUT /api/v1/products/admin/categories/:id
+   * 更新商品分类
    */
-  public updateCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const categoryId = req.params.id;
-      // 修复类型错误，确保 categoryDto 是单个对象而不是数组
-      const categoryData = req.body;
-      const categoryDto = new UpdateCategoryDto(categoryData);
-      const errors = await validate(categoryDto);
-      
+      const id = Number(req.params.id);
+      const updateCategoryDto = plainToClass(UpdateCategoryDto, req.body);
+      const errors = await validate(updateCategoryDto);
+
       if (errors.length > 0) {
-        const message = errors
-          .map(error => Object.values(error.constraints || {}))
-          .flat()
-          .join(', ');
-        throw new HttpException(400, message);
+        throw new HttpException(400, '请求参数错误', errors);
       }
-      
-      const updatedCategory = await this.productService.updateCategory(categoryId, categoryDto);
+
+      const category = await this.productService.updateCategory(id, updateCategoryDto);
       res.status(200).json({
         code: 0,
         message: '更新分类成功',
-        data: updatedCategory
+        data: category
       });
     } catch (error) {
       next(error);
@@ -218,13 +158,12 @@ export class ProductController {
   };
 
   /**
-   * 删除产品分类
-   * DELETE /api/v1/products/admin/categories/:id
+   * 删除商品分类
    */
-  public deleteCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  deleteCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const categoryId = req.params.id;
-      await this.productService.deleteCategory(categoryId);
+      const id = Number(req.params.id);
+      await this.productService.deleteCategory(id);
       res.status(200).json({
         code: 0,
         message: '删除分类成功'
@@ -235,17 +174,14 @@ export class ProductController {
   };
 
   /**
-   * 获取产品分类详情
-   * GET /api/v1/products/categories/:id
+   * 获取所有商品分类
    */
-  public getCategoryById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getAllCategories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const categoryId = req.params.id;
-      const category = await this.productService.findCategoryById(categoryId);
+      const categories = await this.productService.getAllCategories();
       res.status(200).json({
         code: 0,
-        message: '获取分类详情成功',
-        data: category
+        data: categories
       });
     } catch (error) {
       next(error);
