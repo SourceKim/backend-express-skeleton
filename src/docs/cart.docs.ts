@@ -2,31 +2,29 @@
  * @swagger
  * components:
  *   schemas:
- *     Cart:
+ *     CartItem:
  *       type: object
- *       required:
- *         - id
- *         - userId
- *         - productId
- *         - quantity
  *       properties:
  *         id:
  *           type: string
  *           format: uuid
  *           description: 购物车项ID
- *         userId:
+ *           example: 550e8400-e29b-41d4-a716-446655440000
+ *         user_id:
  *           type: string
+ *           format: uuid
  *           description: 用户ID
- *         productId:
+ *           example: 550e8400-e29b-41d4-a716-446655440000
+ *         product_id:
  *           type: string
  *           format: uuid
  *           description: 产品ID
+ *           example: 550e8400-e29b-41d4-a716-446655440000
  *         quantity:
- *           type: number
- *           minimum: 1
+ *           type: integer
  *           description: 数量
- *         product:
- *           $ref: '#/components/schemas/Product'
+ *           minimum: 1
+ *           example: 2
  *         created_at:
  *           type: string
  *           format: date-time
@@ -35,418 +33,215 @@
  *           type: string
  *           format: date-time
  *           description: 更新时间
+ *         product:
+ *           type: object
+ *           description: 产品信息
+ *           properties:
+ *             id:
+ *               type: string
+ *               format: uuid
+ *               description: 产品ID
+ *             name:
+ *               type: string
+ *               description: 产品名称
+ *             price:
+ *               type: number
+ *               description: 产品价格
+ *             image:
+ *               type: string
+ *               description: 产品图片
+ *       required:
+ *         - id
+ *         - user_id
+ *         - product_id
+ *         - quantity
+ *         - created_at
+ *         - updated_at
  *
  *     AddToCartDto:
  *       type: object
- *       required:
- *         - productId
- *         - quantity
  *       properties:
- *         productId:
+ *         product_id:
  *           type: string
  *           format: uuid
  *           description: 产品ID
+ *           example: 550e8400-e29b-41d4-a716-446655440000
  *         quantity:
- *           type: number
- *           minimum: 1
+ *           type: integer
  *           description: 数量
+ *           minimum: 1
+ *           example: 2
+ *       required:
+ *         - product_id
+ *         - quantity
  *
  *     UpdateCartDto:
  *       type: object
- *       required:
- *         - quantity
  *       properties:
  *         quantity:
- *           type: number
- *           minimum: 1
+ *           type: integer
  *           description: 数量
- */
-
-/**
- * @swagger
- * /cart:
- *   get:
- *     tags:
- *       - Cart
- *     summary: 获取购物车
- *     description: 获取当前用户的购物车
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: 成功获取购物车
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Cart'
- *       401:
- *         description: 未授权
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 未授权
+ *           minimum: 1
+ *           example: 3
+ *       required:
+ *         - quantity
  *
- *   post:
- *     tags:
- *       - Cart
- *     summary: 添加商品到购物车
- *     description: 添加商品到当前用户的购物车
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
+ * paths:
+ *   /cart:
+ *     get:
+ *       tags:
+ *         - 购物车
+ *       summary: 获取当前用户的购物车
+ *       description: 获取当前登录用户的购物车内容
+ *       security:
+ *         - BearerAuth: []
+ *       responses:
+ *         200:
+ *           description: 成功获取购物车
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: array
+ *                         items:
+ *                           $ref: '#/components/schemas/CartItem'
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *
+ *     post:
+ *       tags:
+ *         - 购物车
+ *       summary: 添加商品到购物车
+ *       description: 将商品添加到当前登录用户的购物车
+ *       security:
+ *         - BearerAuth: []
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AddToCartDto'
+ *       responses:
+ *         201:
+ *           description: 成功添加商品到购物车
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         $ref: '#/components/schemas/CartItem'
+ *         400:
+ *           $ref: '#/components/responses/ValidationError'
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         404:
+ *           $ref: '#/components/responses/NotFoundError'
+ *
+ *     delete:
+ *       tags:
+ *         - 购物车
+ *       summary: 清空购物车
+ *       description: 清空当前登录用户的购物车
+ *       security:
+ *         - BearerAuth: []
+ *       responses:
+ *         200:
+ *           description: 成功清空购物车
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: object
+ *                         properties:
+ *                           message:
+ *                             type: string
+ *                             example: 购物车已清空
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *
+ *   /cart/{id}:
+ *     put:
+ *       tags:
+ *         - 购物车
+ *       summary: 更新购物车商品数量
+ *       description: 更新当前登录用户购物车中指定商品的数量
+ *       security:
+ *         - BearerAuth: []
+ *       parameters:
+ *         - in: path
+ *           name: id
+ *           required: true
  *           schema:
- *             $ref: '#/components/schemas/AddToCartDto'
- *     responses:
- *       201:
- *         description: 商品已添加到购物车
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/Cart'
- *                 message:
- *                   type: string
- *                   example: 商品已添加到购物车
- *       400:
- *         description: 请求参数错误或库存不足
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *       401:
- *         description: 未授权
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 未授权
- *       404:
- *         description: 产品不存在
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 产品不存在
- *
- *   delete:
- *     tags:
- *       - Cart
- *     summary: 清空购物车
- *     description: 清空当前用户的购物车
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: 购物车已清空
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 购物车已清空
- *       401:
- *         description: 未授权
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 未授权
- */
-
-/**
- * @swagger
- * /cart/{id}:
- *   put:
- *     tags:
- *       - Cart
- *     summary: 更新购物车商品数量
- *     description: 更新购物车中指定商品的数量
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
+ *             type: string
+ *           description: 购物车项ID
+ *       requestBody:
  *         required: true
- *         schema:
- *           type: integer
- *         description: 购物车项ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateCartDto'
+ *       responses:
+ *         200:
+ *           description: 成功更新购物车商品数量
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         $ref: '#/components/schemas/CartItem'
+ *         400:
+ *           $ref: '#/components/responses/ValidationError'
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         404:
+ *           $ref: '#/components/responses/NotFoundError'
+ *
+ *     delete:
+ *       tags:
+ *         - 购物车
+ *       summary: 从购物车中移除商品
+ *       description: 从当前登录用户的购物车中移除指定商品
+ *       security:
+ *         - BearerAuth: []
+ *       parameters:
+ *         - in: path
+ *           name: id
+ *           required: true
  *           schema:
- *             $ref: '#/components/schemas/UpdateCartDto'
- *     responses:
- *       200:
- *         description: 购物车已更新
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/Cart'
- *                 message:
- *                   type: string
- *                   example: 购物车已更新
- *       400:
- *         description: 请求参数错误或库存不足
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *       401:
- *         description: 未授权
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 未授权
- *       404:
- *         description: 购物车项不存在
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 购物车项不存在
- *
- *   delete:
- *     tags:
- *       - Cart
- *     summary: 从购物车移除商品
- *     description: 从购物车中移除指定商品
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: 购物车项ID
- *     responses:
- *       200:
- *         description: 商品已从购物车移除
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 商品已从购物车移除
- *       401:
- *         description: 未授权
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 未授权
- *       404:
- *         description: 购物车项不存在
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 购物车项不存在
- */
-
-/**
- * @swagger
- * /cart/admin:
- *   get:
- *     tags:
- *       - Cart(admin)
- *     summary: 获取所有用户的购物车
- *     description: 管理员获取所有用户的购物车
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: 页码
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: 每页数量
- *     responses:
- *       200:
- *         description: 成功获取所有用户的购物车
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Cart'
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     total:
- *                       type: integer
- *                     page:
- *                       type: integer
- *                     limit:
- *                       type: integer
- *                     totalPages:
- *                       type: integer
- *       401:
- *         description: 未授权
- *       403:
- *         description: 没有管理员权限
- */
-
-/**
- * @swagger
- * /cart/admin/user/{userId}:
- *   get:
- *     tags:
- *       - Cart(admin)
- *     summary: 获取特定用户的购物车
- *     description: 管理员获取特定用户的购物车
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     responses:
- *       200:
- *         description: 成功获取用户的购物车
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Cart'
- *       401:
- *         description: 未授权
- *       403:
- *         description: 没有管理员权限
- *       404:
- *         description: 用户不存在
- *
- *   delete:
- *     tags:
- *       - Cart(admin)
- *     summary: 清空特定用户的购物车
- *     description: 管理员清空特定用户的购物车
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     responses:
- *       200:
- *         description: 用户购物车已清空
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 用户购物车已清空
- *       401:
- *         description: 未授权
- *       403:
- *         description: 没有管理员权限
- *       404:
- *         description: 用户不存在
- */
-
-/**
- * @swagger
- * /cart/admin/{id}:
- *   delete:
- *     tags:
- *       - Cart(admin)
- *     summary: 删除特定购物车项
- *     description: 管理员删除特定购物车项
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 购物车项ID
- *     responses:
- *       200:
- *         description: 购物车项已删除
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 购物车项已删除
- *       401:
- *         description: 未授权
- *       403:
- *         description: 没有管理员权限
- *       404:
- *         description: 购物车项不存在
+ *             type: string
+ *           description: 购物车项ID
+ *       responses:
+ *         200:
+ *           description: 成功从购物车中移除商品
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             description: 被删除的购物车项ID
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         404:
+ *           $ref: '#/components/responses/NotFoundError'
  */ 

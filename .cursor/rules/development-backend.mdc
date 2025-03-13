@@ -20,43 +20,44 @@ alwaysApply: false
 * src/ -  核心代码目录
 
   * configs/ - 配置文件，包含日志、数据库、环境变量、swagger 等配置
-
     * database.config.ts
     * swagger.config.ts
     * env.config.ts
+
   * routes/ - 路由
-
     * user.routes.ts
-  * models/ - 模型，typeorm 实体
 
+  * models/ - 模型，typeorm 实体
     * base.model.ts
     * user.model.ts
-  * dtos/ -  数据传输封装对象
 
+  * dtos/ -  数据传输封装对象
     * common.dto.ts
     * user.dto.ts
-  * docs/ -  swagger 描述文件
 
+  * docs/ -  swagger 描述文件
     * common.docs.ts
     * user.docs.ts
+    * user-admin.docs.ts
+
   * controllers/ - 控制器
-
     * user.controllers.ts
+
   * services/ - 服务
-
     * user.services.ts
-  * middlewares/ - 中间件
 
+  * middlewares/ - 中间件
     * auth.middleware.ts
     * logger.middleware.ts
     * error.middleware.ts
+
   * types/ - 类的声明 & 拓展
-
     * express.d.ts - 扩展了 Express 的 Request 接口，添加了 user 属性
-  * utils / - 工具
 
+  * utils / - 工具
     * logger.utils.ts
     * date.utils.ts
+
   * app.ts - 程序的配置，对 Express 进行配置，比如启用中间件等
   * server.ts - 程序的**主入口，在此处加载环境变量 &amp; 连接数据库**
 
@@ -156,6 +157,10 @@ alwaysApply: false
 #### 示例
 
 ### 5. 根据已有的 DTO & Routes 补充 swagger 文档到 @docs 中
+
+#### 注意事项
+
+1. docs 需要区分 admin，比如 user.docs.ts & user.admin.docs.ts
 
 ### 6. 根据 Routes 实现对应的 controller，放到 @controllers 目录之下
 

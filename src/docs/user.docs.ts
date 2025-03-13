@@ -1,383 +1,47 @@
 /**
  * @swagger
- * /users:
- *   get:
- *     tags:
- *       - Users
- *     summary: 获取用户列表
- *     description: 获取用户集合，支持分页和筛选
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: 页码
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: 每页数量
- *       - in: query
- *         name: username
- *         schema:
- *           type: string
- *         description: 用户名
- *       - in: query
- *         name: email
- *         schema:
- *           type: string
- *         description: 邮箱
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *         description: 用户状态
- *       - in: query
- *         name: is_active
- *         schema:
- *           type: boolean
- *         description: 是否激活
- *     responses:
- *       200:
- *         description: 成功获取用户列表
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/UserResponseDto'
- *                     total:
- *                       type: number
- *                       description: 总记录数
- *                     page:
- *                       type: number
- *                       description: 当前页码
- *                     limit:
- *                       type: number
- *                       description: 每页数量
- *                     totalPages:
- *                       type: number
- *                       description: 总页数
- *                 error:
- *                   type: object
- *                   nullable: true
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   post:
- *     tags:
- *       - Users
- *     summary: 创建用户
- *     description: 管理员创建新用户
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreateUserDto'
- *     responses:
- *       200:
- *         description: 用户创建成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- *       409:
- *         description: 用户名或邮箱已存在
- *       500:
- *         $ref: '#/components/responses/InternalError'
- */
-
-/**
- * @swagger
- * /users/{id}:
- *   get:
- *     tags:
- *       - Users
- *     summary: 获取用户详情
- *     description: 获取指定用户ID的详细信息
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     responses:
- *       200:
- *         description: 成功获取用户详情
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   put:
- *     tags:
- *       - Users
- *     summary: 更新用户
- *     description: 更新指定ID的用户信息
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateUserDto'
- *     responses:
- *       200:
- *         description: 用户更新成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       409:
- *         description: 用户名或邮箱已存在
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   delete:
- *     tags:
- *       - Users
- *     summary: 删除用户
- *     description: 删除指定ID的用户
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     responses:
- *       200:
- *         description: 用户删除成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: object
- *                   nullable: true
- *                 error:
- *                   type: object
- *                   nullable: true
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- */
-
-/**
- * @swagger
- * /users/{id}/status:
- *   patch:
- *     tags:
- *       - Users
- *     summary: 更新用户状态
- *     description: 更新指定用户的状态（激活/禁用）
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - is_active
- *             properties:
- *               is_active:
- *                 type: boolean
- *                 description: 是否激活
- *     responses:
- *       200:
- *         description: 用户状态更新成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- */
-
-/**
- * @swagger
  * components:
  *   schemas:
+ *     UserStatus:
+ *       type: string
+ *       enum: [active, inactive, banned]
+ *       description: 用户状态
+ *
  *     User:
  *       type: object
- *       required:
- *         - id
- *         - username
- *         - status
- *         - isActive
  *       properties:
  *         id:
  *           type: string
  *           format: uuid
  *           description: 用户ID
+ *           example: 550e8400-e29b-41d4-a716-446655440000
  *         username:
  *           type: string
  *           description: 用户名
+ *           example: johndoe
  *         email:
  *           type: string
  *           format: email
  *           description: 邮箱
- *         phone:
- *           type: string
- *           description: 手机号
+ *           example: john@example.com
  *         nickname:
  *           type: string
  *           description: 昵称
+ *           example: John Doe
+ *         phone:
+ *           type: string
+ *           description: 手机号
+ *           example: 13800138000
  *         avatar:
  *           type: string
  *           description: 头像URL
+ *           example: https://example.com/avatar.jpg
+ *         status:
+ *           $ref: '#/components/schemas/UserStatus'
  *         bio:
  *           type: string
  *           description: 用户简介
- *         status:
- *           type: string
- *           enum: [active, inactive, banned]
- *           description: 用户状态
- *         isActive:
- *           type: boolean
- *           description: 是否激活
- *         roles:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               id:
- *                 type: string
- *                 format: uuid
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *           description: 用户角色
+ *           example: 这是我的个人简介
  *         created_at:
  *           type: string
  *           format: date-time
@@ -386,40 +50,27 @@
  *           type: string
  *           format: date-time
  *           description: 更新时间
- *
- *     CreateUserDto:
- *       type: object
- *       required:
- *         - username
- *         - password
- *       properties:
- *         username:
- *           type: string
- *           description: 用户名
- *         password:
- *           type: string
- *           description: 密码
- *         email:
- *           type: string
- *           format: email
- *           description: 邮箱
- *         phone:
- *           type: string
- *           description: 手机号
- *         nickname:
- *           type: string
- *           description: 昵称
- *         avatar:
- *           type: string
- *           description: 头像URL
- *         bio:
- *           type: string
- *           description: 用户简介
  *         roles:
  *           type: array
  *           items:
- *             type: string
- *           description: 角色ID列表
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: 角色ID
+ *               name:
+ *                 type: string
+ *                 description: 角色名称
+ *               description:
+ *                 type: string
+ *                 description: 角色描述
+ *       required:
+ *         - id
+ *         - username
+ *         - status
+ *         - created_at
+ *         - updated_at
  *
  *     UpdateUserDto:
  *       type: object
@@ -428,416 +79,75 @@
  *           type: string
  *           format: email
  *           description: 邮箱
- *         phone:
- *           type: string
- *           description: 手机号
+ *           example: john@example.com
  *         nickname:
  *           type: string
  *           description: 昵称
- *         avatar:
- *           type: string
- *           description: 头像URL
- *         bio:
- *           type: string
- *           description: 用户简介
- *         status:
- *           type: string
- *           enum: [active, inactive, banned]
- *           description: 用户状态
- *         roles:
- *           type: array
- *           items:
- *             type: string
- *           description: 角色ID列表
- *         isActive:
- *           type: boolean
- *           description: 是否激活
- *
- *     UserResponseDto:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           format: uuid
- *           description: 用户ID
- *         username:
- *           type: string
- *           description: 用户名
- *         email:
- *           type: string
- *           format: email
- *           description: 邮箱
- *           nullable: true
+ *           example: John Doe
  *         phone:
  *           type: string
  *           description: 手机号
- *           nullable: true
- *         nickname:
- *           type: string
- *           description: 昵称
- *           nullable: true
+ *           example: 13800138000
  *         avatar:
  *           type: string
  *           description: 头像URL
- *           nullable: true
+ *           example: https://example.com/avatar.jpg
  *         bio:
  *           type: string
  *           description: 用户简介
- *           nullable: true
- *         status:
- *           type: string
- *           enum: [active, inactive, banned]
- *           description: 用户状态
- *         is_active:
- *           type: boolean
- *           description: 是否激活
- *         created_at:
- *           type: string
- *           format: date-time
- *           description: 创建时间
- *         updated_at:
- *           type: string
- *           format: date-time
- *           description: 更新时间
- *         roles:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               id:
- *                 type: string
- *                 format: uuid
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *                 nullable: true
- *           description: 用户角色
- */
-
-/**
- * @swagger
- * /users/profile:
- *   get:
- *     tags:
- *       - Users
- *     summary: 获取当前用户信息
- *     description: 获取当前登录用户的详细信息
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: 成功获取用户信息
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
+ *           example: 这是我的个人简介
  *
- *   put:
- *     tags:
- *       - Users
- *     summary: 更新当前用户信息
- *     description: 更新当前登录用户的信息
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateUserDto'
- *     responses:
- *       200:
- *         description: 用户信息更新成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: 更新用户成功
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- */
-
-/**
- * @swagger
- * /users/admin:
- *   get:
- *     tags:
- *       - Users(admin)
- *     summary: 获取用户列表
- *     description: 管理员获取用户集合，支持分页和筛选
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: 页码
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: 每页数量
- *       - in: query
- *         name: username
- *         schema:
- *           type: string
- *         description: 用户名
- *       - in: query
- *         name: email
- *         schema:
- *           type: string
- *         description: 邮箱
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *         description: 用户状态
- *       - in: query
- *         name: is_active
- *         schema:
- *           type: boolean
- *         description: 是否激活
- *     responses:
- *       200:
- *         description: 成功获取用户列表
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/UserListResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         description: 没有管理员权限
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   post:
- *     tags:
- *       - Users(admin)
- *     summary: 创建用户
- *     description: 管理员创建新用户
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreateUserDto'
- *     responses:
- *       201:
- *         description: 用户创建成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: 创建用户成功
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         description: 没有管理员权限
- *       500:
- *         $ref: '#/components/responses/InternalError'
- */
-
-/**
- * @swagger
- * /users/admin/{id}:
- *   get:
- *     tags:
- *       - Users(admin)
- *     summary: 获取用户详情
- *     description: 管理员获取指定用户ID的详细信息
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
+ * paths:
+ *   /users/profile:
+ *     get:
+ *       tags:
+ *         - 用户
+ *       summary: 获取当前用户信息
+ *       description: 获取当前登录用户的详细信息
+ *       security:
+ *         - BearerAuth: []
+ *       responses:
+ *         200:
+ *           description: 成功获取用户信息
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         $ref: '#/components/schemas/User'
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *
+ *     put:
+ *       tags:
+ *         - 用户
+ *       summary: 更新当前用户信息
+ *       description: 更新当前登录用户的个人信息
+ *       security:
+ *         - BearerAuth: []
+ *       requestBody:
  *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     responses:
- *       200:
- *         description: 成功获取用户详情
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         description: 没有管理员权限
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   put:
- *     tags:
- *       - Users(admin)
- *     summary: 更新用户
- *     description: 管理员更新指定ID的用户信息
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateUserDto'
- *     responses:
- *       200:
- *         description: 用户更新成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: 更新用户成功
- *                 data:
- *                   $ref: '#/components/schemas/UserResponseDto'
- *                 error:
- *                   type: object
- *                   nullable: true
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         description: 没有管理员权限
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
- *   
- *   delete:
- *     tags:
- *       - Users(admin)
- *     summary: 删除用户
- *     description: 管理员删除指定ID的用户
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 用户ID
- *     responses:
- *       200:
- *         description: 用户删除成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 0
- *                 message:
- *                   type: string
- *                   example: 删除用户成功
- *                 data:
- *                   type: null
- *                 error:
- *                   type: object
- *                   nullable: true
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         description: 没有管理员权限
- *       404:
- *         $ref: '#/components/responses/NotFound'
- *       500:
- *         $ref: '#/components/responses/InternalError'
+ *               $ref: '#/components/schemas/UpdateUserDto'
+ *       responses:
+ *         200:
+ *           description: 成功更新用户信息
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         $ref: '#/components/schemas/User'
+ *         400:
+ *           $ref: '#/components/responses/ValidationError'
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
  */ 
