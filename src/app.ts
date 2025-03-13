@@ -3,15 +3,13 @@ import cors from 'cors';
 import compression from 'compression';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
-import { swaggerSpec } from '@/config/swagger';
+import { swaggerSpec } from '@/configs/swagger.config';
 import { errorMiddleware } from '@/middlewares/error.middleware';
 import { requestTracingMiddleware, httpLoggerMiddleware } from '@/middlewares/logger.middleware';
 import routes from '@/routes/index';
-import { ENV } from '@/config/env.config';
+import { ENV } from '@/configs/env.config';
 
 const app = express();
-
-console.log(ENV.CORS_ORIGINS);
 
 // 中间件
 app.use(cors({

@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Up
 import { IsString, IsNumber, IsNotEmpty, Min, IsEnum, IsArray, ValidateNested, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 import { User } from './user.model';
-
+import { BaseEntity } from './base.model';  
 enum OrderStatus {
   PENDING = 'pending',
   PAID = 'paid',
@@ -11,11 +11,7 @@ enum OrderStatus {
   CANCELLED = 'cancelled'
 }
 
-class OrderProduct {
-  @IsString()
-  @IsNotEmpty()
-  id!: string;
-
+class OrderProduct extends BaseEntity {
   @IsString()
   @IsNotEmpty()
   name!: string;
@@ -47,10 +43,7 @@ class OrderAddress {
 }
 
 @Entity('orders')
-export class Order {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class Order extends BaseEntity {
   @Column()
   @IsString()
   @IsNotEmpty({ message: '订单编号不能为空' })
@@ -86,13 +79,7 @@ export class Order {
   @Type(() => OrderAddress)
   address!: OrderAddress;
 
-  @CreateDateColumn({ name: 'created_at' })
-  created_at!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updated_at!: Date;
-
   constructor(partial: Partial<Order> = {}) {
-    Object.assign(this, partial);
+    super(partial);
   }
 } 

@@ -1,9 +1,9 @@
 /// <reference path="./types/express/index.d.ts" />
 import 'reflect-metadata';
-import { ENV } from '@/config/env.config';
+import { ENV } from '@/configs/env.config';
 import app from '@/app';
 import { logInfo, logError, logDebug } from '@/utils/logger';
-import { AppDataSource } from '@/config/database';
+import { AppDataSource } from '@/configs/database.config';
 
 // 初始化数据库连接
 AppDataSource.initialize()

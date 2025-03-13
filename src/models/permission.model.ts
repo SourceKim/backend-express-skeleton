@@ -1,13 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany } from 'typeorm';
+import { Entity, Column, ManyToMany } from 'typeorm';
 import { Role } from '@/models/role.model';
-import { IsString, IsNotEmpty, IsUUID, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
+import { BaseEntity } from '@/models/base.model';
 
 @Entity('permissions')
-export class Permission {
-    @PrimaryGeneratedColumn('uuid')
-    @IsUUID()
-    id!: string;
-
+export class Permission extends BaseEntity {
     @Column({ type: 'varchar', length: 100, unique: true })
     @IsString()
     @IsNotEmpty({ message: '权限名称不能为空' })
@@ -34,13 +31,7 @@ export class Permission {
     @ManyToMany(() => Role, role => role.permissions)
     roles!: Role[];
 
-    @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
-    created_at!: Date;
-
-    @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
-    updated_at!: Date;
-
     constructor(partial: Partial<Permission> = {}) {
-        Object.assign(this, partial);
+        super(partial);
     }
 } 

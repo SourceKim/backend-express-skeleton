@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, Min, IsEnum, IsUrl } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, IsEnum, IsUrl, IsUUID, IsArray, ArrayMinSize } from 'class-validator';
 
 enum ProductStatus {
   ACTIVE = 'active',
@@ -6,6 +6,45 @@ enum ProductStatus {
   OUT_OF_STOCK = 'out_of_stock'
 }
 
+// 分类相关 DTO
+export class CreateCategoryDto {
+  @IsString()
+  name!: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsUUID()
+  @IsOptional()
+  parent_id?: string;
+
+  constructor(partial: Partial<CreateCategoryDto> = {}) {
+    Object.assign(this, partial);
+  }
+}
+
+export class UpdateCategoryDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsUUID()
+  @IsOptional()
+  parent_id?: string;
+
+  constructor(partial: Partial<UpdateCategoryDto> = {}) {
+    Object.assign(this, partial);
+  }
+}
+
+// 产品相关 DTO
 export class CreateProductDto {
   @IsString()
   name!: string;
@@ -21,12 +60,14 @@ export class CreateProductDto {
   @Min(0)
   stock!: number;
 
-  @IsString()
-  @IsUrl()
-  image!: string;
+  @IsArray()
+  @ArrayMinSize(1, { message: '至少需要一个素材图片' })
+  @IsUUID('all', { each: true, message: '素材ID必须是有效的UUID' })
+  images!: string[];
 
   @IsString()
-  category!: string;
+  @IsUUID()
+  category_id!: string;
 
   @IsOptional()
   @IsEnum(ProductStatus)
@@ -57,13 +98,15 @@ export class UpdateProductDto {
   stock?: number;
 
   @IsOptional()
-  @IsString()
-  @IsUrl()
-  image?: string;
+  @IsArray()
+  @ArrayMinSize(1, { message: '至少需要一个素材图片' })
+  @IsUUID('all', { each: true, message: '素材ID必须是有效的UUID' })
+  images?: string[];
 
   @IsOptional()
   @IsString()
-  category?: string;
+  @IsUUID()
+  category_id?: string;
 
   @IsOptional()
   @IsEnum(ProductStatus)

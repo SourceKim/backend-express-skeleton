@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { loggerConfig } from '@/config/logger.config';
+import { loggerConfig } from '@/configs/logger.config';
 
 // 创建 Winston logger 实例
 export const logger = winston.createLogger(loggerConfig);

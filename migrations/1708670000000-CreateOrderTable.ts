@@ -1,13 +1,13 @@
 import { MigrationInterface, QueryRunner, Table } from "typeorm";
 
-export class CreateCartTable1708669500000 implements MigrationInterface {
-    name = 'CreateCartTable1708669500000'
+export class CreateOrderTable1708670000000 implements MigrationInterface {
+    name = 'CreateOrderTable1708670000000'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // 创建购物车表
+        // 创建订单表
         await queryRunner.createTable(
             new Table({
-                name: "cart_items",
+                name: "orders",
                 columns: [
                     {
                         name: "id",
@@ -18,22 +18,41 @@ export class CreateCartTable1708669500000 implements MigrationInterface {
                         generationStrategy: 'uuid'
                     },
                     {
+                        name: "order_no",
+                        type: "varchar",
+                        length: "50",
+                        isNullable: false,
+                        isUnique: true
+                    },
+                    {
                         name: "user_id",
                         type: "varchar",
-                        length: "36",
+                        length: "36", // 修改为36以匹配UUID格式
                         isNullable: false
                     },
                     {
-                        name: "product_id",
-                        type: "varchar",
-                        length: "36",
+                        name: "products",
+                        type: "json",
                         isNullable: false
                     },
                     {
-                        name: "quantity",
-                        type: "int",
-                        isNullable: false,
-                        default: 1
+                        name: "total_amount",
+                        type: "decimal",
+                        precision: 10,
+                        scale: 2,
+                        isNullable: false
+                    },
+                    {
+                        name: "status",
+                        type: "enum",
+                        enum: ["pending", "paid", "shipped", "completed", "cancelled"],
+                        default: "'pending'",
+                        isNullable: false
+                    },
+                    {
+                        name: "address",
+                        type: "json",
+                        isNullable: false
                     },
                     {
                         name: "created_at",
@@ -53,19 +72,6 @@ export class CreateCartTable1708669500000 implements MigrationInterface {
                         referencedTableName: "users",
                         referencedColumnNames: ["id"],
                         onDelete: "CASCADE"
-                    },
-                    {
-                        columnNames: ["product_id"],
-                        referencedTableName: "products",
-                        referencedColumnNames: ["id"],
-                        onDelete: "CASCADE"
-                    }
-                ],
-                indices: [
-                    {
-                        name: "idx_cart_user_product",
-                        columnNames: ["user_id", "product_id"],
-                        isUnique: true
                     }
                 ]
             }),
@@ -74,6 +80,6 @@ export class CreateCartTable1708669500000 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropTable("cart_items");
+        await queryRunner.dropTable("orders");
     }
 } 

@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { User, UserStatus } from '@/models/user.model';
 import { Role } from '@/models/role.model';
-import { AppDataSource } from '@/config/database';
+import { AppDataSource } from '@/configs/database.config';
 import { HttpException } from '@/exceptions/http.exception';
 import { CreateUserDto, UpdateUserDto, UserQueryDto } from '@/dtos/user.dto';
 import { nanoid } from 'nanoid';

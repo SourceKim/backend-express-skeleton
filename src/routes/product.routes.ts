@@ -14,8 +14,16 @@ router.get('/:id', controller.getProductById);
 // 管理员产品路由
 // 注意：这里使用 /admin 前缀，并添加认证和管理员中间件
 router.use('/admin', authMiddleware, adminMiddleware);
-router.post('/admin', controller.createProduct); // 创建产品
-router.put('/admin/:id', controller.updateProduct); // 更新产品
-router.delete('/admin/:id', controller.deleteProduct); // 删除产品
+
+// 分类管理路由
+router.post('/admin/categories', controller.createCategory);
+router.get('/admin/categories/:id', controller.getCategoryById);
+router.put('/admin/categories/:id', controller.updateCategory);
+router.delete('/admin/categories/:id', controller.deleteCategory);
+
+// 产品管理路由
+router.post('/admin', controller.createProduct);
+router.put('/admin/:id', controller.updateProduct);
+router.delete('/admin/:id', controller.deleteProduct);
 
 export default router; 

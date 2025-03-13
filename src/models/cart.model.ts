@@ -2,12 +2,10 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Up
 import { IsNumber, IsString, IsNotEmpty, Min } from 'class-validator';
 import { User } from './user.model';
 import { Product } from './product.model';
+import { BaseEntity } from './base.model';
 
 @Entity('cart_items')
-export class Cart {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class Cart extends BaseEntity {
   @ManyToOne(() => User, user => user.carts)
   @JoinColumn({ name: 'user_id' })
   user!: User;
@@ -31,13 +29,7 @@ export class Cart {
   @Min(1, { message: '数量不能小于1' })
   quantity!: number;
 
-  @CreateDateColumn({ name: 'created_at' })
-  created_at!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updated_at!: Date;
-
   constructor(partial: Partial<Cart> = {}) {
-    Object.assign(this, partial);
+    super(partial);
   }
 } 

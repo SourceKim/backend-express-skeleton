@@ -1,9 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, BeforeUpdate, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, Column, BeforeInsert, BeforeUpdate, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { IsEmail, Length, IsOptional, Matches, IsEnum, MinLength } from 'class-validator';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '@/models/role.model';
 import { Order } from '@/models/order.model';
 import { Cart } from '@/models/cart.model';
+import { BaseEntity } from '@/models/base.model';
 
 export enum UserStatus {
     ACTIVE = 'active',
@@ -12,10 +13,7 @@ export enum UserStatus {
 }
 
 @Entity('users')
-export class User {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string;
-
+export class User extends BaseEntity {
     @Column({ type: 'varchar', length: 100, unique: true })
     @Length(3, 100, { message: '用户名长度必须在3-100个字符之间' })
     username!: string;
@@ -56,15 +54,6 @@ export class User {
     @Length(0, 500, { message: '简介长度不能超过500个字符' })
     bio?: string; // 用户简介
 
-    @Column({ type: 'boolean', default: true })
-    isActive!: boolean;
-
-    @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
-    created_at!: Date;
-
-    @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
-    updated_at!: Date;
-
     @ManyToMany(() => Role, role => role.users)
     @JoinTable({
         name: 'user_roles',
@@ -98,6 +87,6 @@ export class User {
     }
 
     constructor(partial: Partial<User> = {}) {
-        Object.assign(this, partial);
+        super(partial);
     }
 } 

@@ -16,7 +16,7 @@ import { HttpException } from '@/exceptions/http.exception';
 import { PaginationQueryDto, ApiResponse } from '@/dtos/common.dto';
 import { MaterialType } from '@/models/material.model';
 import { User } from '@/models/user.model';
-import { ENV } from '@/config/env.config';
+import { ENV } from '@/configs/env.config';
 
 /**
  * 素材控制器

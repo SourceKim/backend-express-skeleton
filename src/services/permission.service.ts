@@ -1,5 +1,5 @@
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@/config/database';
+import { AppDataSource } from '@/configs/database.config';
 import { Permission } from '@/models/permission.model';
 import {
     CreatePermissionDto,

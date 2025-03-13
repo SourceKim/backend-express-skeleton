@@ -2,13 +2,10 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { Permission } from '@/models/permission.model';
 import { User } from '@/models/user.model';
 import { IsString, IsNotEmpty, IsUUID, IsOptional, MaxLength } from 'class-validator';
+import { BaseEntity } from '@/models/base.model';
 
 @Entity('roles')
-export class Role {
-    @PrimaryGeneratedColumn('uuid')
-    @IsUUID()
-    id!: string;
-
+export class Role extends BaseEntity {
     @Column({ type: 'varchar', length: 100, unique: true })
     @IsString()
     @IsNotEmpty({ message: '角色名称不能为空' })
@@ -37,13 +34,7 @@ export class Role {
     @ManyToMany(() => User, user => user.roles)
     users!: User[];
 
-    @CreateDateColumn({ type: 'timestamp' })
-    created_at!: Date;
-
-    @UpdateDateColumn({ type: 'timestamp' })
-    updated_at!: Date;
-
     constructor(partial: Partial<Role> = {}) {
-        Object.assign(this, partial);
+        super(partial);
     }
 } 

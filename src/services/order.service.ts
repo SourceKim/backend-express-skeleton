@@ -1,4 +1,4 @@
-import { AppDataSource } from '@/config/database';
+import { AppDataSource } from '@/configs/database.config';
 import { Order } from '@/models/order.model';
 import { Product } from '@/models/product.model';
 import { Cart } from '@/models/cart.model';
@@ -46,7 +46,9 @@ export class OrderService {
         name: product.name,
         price: product.price,
         quantity: item.quantity,
-        image: product.image
+        image: product.images && product.images.length > 0 && product.images[0].path 
+          ? product.images[0].path 
+          : 'default-image.jpg' // 提供一个默认图片路径
       });
     }
 
@@ -64,8 +66,8 @@ export class OrderService {
     // 验证模型数据
     await validateModel(newOrder);
 
-    const savedOrder = await this.orderRepository.save(newOrder);
-    return savedOrder;
+    // 保存订单
+    return this.orderRepository.save(newOrder);
   }
 
   public async findUserOrders(userId: string): Promise<any> {

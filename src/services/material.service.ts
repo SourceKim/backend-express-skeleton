@@ -1,4 +1,4 @@
-import { AppDataSource } from '@/config/database';
+import { AppDataSource } from '@/configs/database.config';
 import { Material, MaterialType } from '@/models/material.model';
 import { Repository, FindOptionsWhere, Like, In } from 'typeorm';
 import { HttpException } from '@/exceptions/http.exception';
@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import { nanoid } from 'nanoid';
-import { ENV } from '@/config/env.config';
+import { ENV } from '@/configs/env.config';
 import multer from 'multer';
 
 const unlinkAsync = promisify(fs.unlink);

@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner, Table } from "typeorm";
 
-export class CreateProductTable1708669400000 implements MigrationInterface {
-    name = 'CreateProductTable1708669400000'
+export class CreateProductTable1708669800000 implements MigrationInterface {
+    name = 'CreateProductTable1708669800000'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // 创建产品分类表
@@ -28,12 +28,12 @@ export class CreateProductTable1708669400000 implements MigrationInterface {
                         length: "36",
                         isPrimary: true,
                         isGenerated: true,
-                        generationStrategy: 'uuid'
+                        generationStrategy: "uuid"
                     },
                     {
                         name: "name",
                         type: "varchar",
-                        length: "255",
+                        length: "100",
                         isNullable: false
                     },
                     {
@@ -51,25 +51,18 @@ export class CreateProductTable1708669400000 implements MigrationInterface {
                     {
                         name: "stock",
                         type: "int",
-                        isNullable: false,
-                        default: 0
-                    },
-                    {
-                        name: "image",
-                        type: "varchar",
-                        length: "255",
                         isNullable: false
                     },
                     {
-                        name: "category",
+                        name: "category_id",
                         type: "varchar",
-                        length: "100",
+                        length: "36",
                         isNullable: false
                     },
                     {
                         name: "status",
-                        type: "enum",
-                        enum: ["active", "inactive", "out_of_stock"],
+                        type: "varchar",
+                        length: "20",
                         default: "'active'",
                         isNullable: false
                     },
@@ -83,6 +76,57 @@ export class CreateProductTable1708669400000 implements MigrationInterface {
                         type: "timestamp",
                         default: "CURRENT_TIMESTAMP",
                         onUpdate: "CURRENT_TIMESTAMP"
+                    }
+                ],
+                foreignKeys: [
+                    {
+                        columnNames: ["category_id"],
+                        referencedTableName: "product_categories",
+                        referencedColumnNames: ["id"],
+                        onDelete: "RESTRICT"
+                    }
+                ]
+            }),
+            true
+        );
+
+        // 创建产品与素材的关联表
+        await queryRunner.createTable(
+            new Table({
+                name: "product_materials",
+                columns: [
+                    {
+                        name: "product_id",
+                        type: "varchar",
+                        length: "36",
+                        isNullable: false
+                    },
+                    {
+                        name: "material_id",
+                        type: "varchar",
+                        length: "36",
+                        isNullable: false
+                    }
+                ],
+                indices: [
+                    {
+                        name: "PK_product_materials",
+                        columnNames: ["product_id", "material_id"],
+                        isUnique: true
+                    }
+                ],
+                foreignKeys: [
+                    {
+                        columnNames: ["product_id"],
+                        referencedTableName: "products",
+                        referencedColumnNames: ["id"],
+                        onDelete: "CASCADE"
+                    },
+                    {
+                        columnNames: ["material_id"],
+                        referencedTableName: "materials",
+                        referencedColumnNames: ["id"],
+                        onDelete: "CASCADE"
                     }
                 ]
             }),
@@ -100,6 +144,7 @@ export class CreateProductTable1708669400000 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`DROP TABLE IF EXISTS product_materials`);
         await queryRunner.dropTable("products");
         await queryRunner.query(`DROP TABLE IF EXISTS product_categories`);
     }

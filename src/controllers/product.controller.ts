@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 import { ProductService } from '@/services/product.service';
-import { CreateProductDto, UpdateProductDto } from '@/dtos/product.dto';
+import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDto } from '@/dtos/product.dto';
 import { HttpException } from '@/exceptions/HttpException';
 import { ApiResponse } from '@/dtos/common.dto';
 
@@ -13,9 +13,9 @@ export class ProductController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const category = req.query.category as string;
+      const categoryId = req.query.category_id as string;
       
-      const products = await this.productService.findAllProducts(page, limit, category);
+      const products = await this.productService.findAllProducts(page, limit, categoryId);
       res.status(200).json({
         code: 0,
         message: '获取产品列表成功',
@@ -114,6 +114,87 @@ export class ProductController {
       const productId = req.params.id;
       await this.productService.deleteProduct(productId);
       res.status(200).json({ message: '产品删除成功' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // 管理员分类相关方法
+  public createCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      // 修复类型错误，确保 categoryDto 是单个对象而不是数组
+      const categoryData = req.body;
+      const categoryDto = new CreateCategoryDto(categoryData);
+      const errors = await validate(categoryDto);
+      
+      if (errors.length > 0) {
+        const message = errors
+          .map(error => Object.values(error.constraints || {}))
+          .flat()
+          .join(', ');
+        throw new HttpException(400, message);
+      }
+      
+      const newCategory = await this.productService.createCategory(categoryDto);
+      res.status(201).json({
+        code: 0,
+        message: '创建分类成功',
+        data: newCategory
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updateCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const categoryId = req.params.id;
+      // 修复类型错误，确保 categoryDto 是单个对象而不是数组
+      const categoryData = req.body;
+      const categoryDto = new UpdateCategoryDto(categoryData);
+      const errors = await validate(categoryDto);
+      
+      if (errors.length > 0) {
+        const message = errors
+          .map(error => Object.values(error.constraints || {}))
+          .flat()
+          .join(', ');
+        throw new HttpException(400, message);
+      }
+      
+      const updatedCategory = await this.productService.updateCategory(categoryId, categoryDto);
+      res.status(200).json({
+        code: 0,
+        message: '更新分类成功',
+        data: updatedCategory
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public deleteCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const categoryId = req.params.id;
+      await this.productService.deleteCategory(categoryId);
+      res.status(200).json({
+        code: 0,
+        message: '删除分类成功'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getCategoryById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const categoryId = req.params.id;
+      const category = await this.productService.findCategoryById(categoryId);
+      res.status(200).json({
+        code: 0,
+        message: '获取分类详情成功',
+        data: category
+      });
     } catch (error) {
       next(error);
     }

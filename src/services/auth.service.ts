@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { User, UserStatus } from '@/models/user.model';
 import { UserSettings } from '@/models/user-settings.model';
-import { AppDataSource } from '@/config/database';
+import { AppDataSource } from '@/configs/database.config';
 import { HttpException } from '@/exceptions/http.exception';
 import * as jwt from 'jsonwebtoken';
 import { RegisterDto, LoginDto } from '@/dtos/auth.dto';

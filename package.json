@@ -14,12 +14,12 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/init-super-admin.ts",
-    "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d src/config/database.ts",
+    "seed:admin": "ts-node -r tsconfig-paths/register scripts/init-super-admin.ts",
+    "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d src/configs/database.config.ts",
     "migration:create": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:create",
-    "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
-    "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/config/database.ts",
-    "migration:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/config/database.ts"
+    "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/configs/database.config.ts",
+    "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/configs/database.config.ts",
+    "migration:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/configs/database.config.ts"
   },
   "keywords": [
     "backend"

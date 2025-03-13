@@ -1,12 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '@/models/user.model';
 import { IsString, IsBoolean, IsNotEmpty, IsUUID } from 'class-validator';
+import { BaseEntity } from '@/models/base.model';
 
 @Entity('user_settings')
-export class UserSettings {
-    @PrimaryGeneratedColumn('uuid')
-    @IsUUID()
-    id!: string;
+export class UserSettings extends BaseEntity {
 
     @OneToOne(() => User)
     @JoinColumn({ name: 'user_id' })
@@ -25,10 +23,4 @@ export class UserSettings {
     @Column({ type: 'boolean', default: true })
     @IsBoolean()
     notifications_enabled!: boolean;
-
-    @CreateDateColumn({ type: 'timestamp' })
-    created_at!: Date;
-
-    @UpdateDateColumn({ type: 'timestamp' })
-    updated_at!: Date;
 } 

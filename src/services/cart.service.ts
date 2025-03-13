@@ -1,4 +1,4 @@
-import { AppDataSource } from '@/config/database';
+import { AppDataSource } from '@/configs/database.config';
 import { Cart } from '@/models/cart.model';
 import { Product } from '@/models/product.model';
 import { AddToCartDto, UpdateCartDto } from '@/dtos/cart.dto';

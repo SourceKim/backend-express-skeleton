@@ -1,7 +1,7 @@
-import { AppDataSource } from '@/config/database';
-import { User, UserStatus } from '@/models/user.model';
-import { Role } from '@/models/role.model';
-import { Permission } from '@/models/permission.model';
+import { AppDataSource } from '../src/configs/database.config';
+import { User, UserStatus } from '../src/models/user.model';
+import { Role } from '../src/models/role.model';
+import { Permission } from '../src/models/permission.model';
 import { nanoid } from 'nanoid';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcryptjs';

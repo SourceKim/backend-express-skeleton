@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from '@/models/user.model';
 import { IsString, IsInt, IsBoolean, IsOptional, IsUUID, IsEnum, Min, MaxLength } from 'class-validator';
-
+import { BaseEntity } from '@/models/base.model';
 /**
  * 素材类型枚举
  * image: 图片素材
@@ -18,14 +18,7 @@ export type MaterialType = 'image' | 'audio' | 'video' | 'document' | 'text' | '
  * 用于管理各种类型的素材，包括图片、音频、视频、文档、文本等
  */
 @Entity('materials')
-export class Material {
-    /**
-     * 素材唯一标识符
-     */
-    @PrimaryGeneratedColumn('uuid')
-    @IsUUID()
-    id!: string;
-
+export class Material extends BaseEntity {
     /**
      * 素材文件名
      * 对于文本类型素材可为空
@@ -171,17 +164,7 @@ export class Material {
     @OneToMany(() => Material, material => material.parent_id)
     related_materials?: Material[];
 
-    /**
-     * 素材创建时间
-     * 自动生成
-     */
-    @CreateDateColumn()
-    created_at!: Date;
-
-    /**
-     * 素材更新时间
-     * 自动更新
-     */
-    @UpdateDateColumn()
-    updated_at!: Date;
+    constructor(partial: Partial<Material> = {}) {
+        super(partial);
+    }
 } 
