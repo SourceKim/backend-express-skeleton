@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { RoleService } from '@/services/role.service';
-import { ApiResponse } from '@/dtos/common.dto';
+import { ApiResponse, PaginatedResponse, PaginationQueryDto } from '@/dtos/common.dto';
 import { 
     CreateRoleDto,
     UpdateRoleDto,
@@ -28,15 +28,26 @@ export class RoleController {
      */
     public findAllRoles = async (
         req: Request, 
-        res: Response<ApiResponse<RoleResponseDto[]>>,
+        res: Response<ApiResponse<PaginatedResponse<RoleResponseDto>>>,
         next: NextFunction
     ): Promise<void> => {
         try {
-            const roles = await this.roleService.findAllRoles();
+            // 从查询参数中获取分页参数
+            const query = PaginationQueryDto.fromRequest(req.query);
+            
+            // 调用服务获取分页数据
+            const paginatedRoles = await this.roleService.findAllRoles(
+                query.page,
+                query.limit,
+                query.sort_by,
+                query.sort_order
+            );
+            
+            // 返回分页数据
             res.json({
                 code: 0,
-                message: 'success',
-                data: roles
+                message: '获取角色列表成功',
+                data: paginatedRoles
             });
         } catch (error) {
             next(error);

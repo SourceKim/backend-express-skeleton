@@ -25,7 +25,7 @@ export class OrderController {
         throw new HttpException(400, '请求参数错误', errors);
       }
 
-      const order = await this.orderService.createOrder(Number(userId), createOrderDto);
+      const order = await this.orderService.createOrder(userId, createOrderDto);
       res.status(201).json({
         code: 0,
         message: '创建订单成功',
@@ -41,7 +41,7 @@ export class OrderController {
    */
   updateOrderStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = Number(req.params.id);
+      const id = req.params.id;
       const updateOrderStatusDto = plainToClass(UpdateOrderStatusDto, req.body);
       const errors = await validate(updateOrderStatusDto);
 
@@ -77,7 +77,7 @@ export class OrderController {
         throw new HttpException(400, '请求参数错误', errors);
       }
 
-      const orders = await this.orderService.getOrders(queryDto, Number(userId));
+      const orders = await this.orderService.getOrders(queryDto, userId);
       res.status(200).json({
         code: 0,
         data: orders
@@ -119,8 +119,8 @@ export class OrderController {
         throw new HttpException(401, '未授权');
       }
 
-      const id = Number(req.params.id);
-      const order = await this.orderService.getOrderById(id, Number(userId));
+      const id = req.params.id;
+      const order = await this.orderService.getOrderById(id, userId);
       res.status(200).json({
         code: 0,
         data: order
@@ -140,8 +140,8 @@ export class OrderController {
         throw new HttpException(401, '未授权');
       }
 
-      const id = Number(req.params.id);
-      const order = await this.orderService.cancelOrder(id, Number(userId));
+      const id = req.params.id;
+      const order = await this.orderService.cancelOrder(id, userId);
       res.status(200).json({
         code: 0,
         message: '取消订单成功',

@@ -51,14 +51,14 @@ export class CreateProductDto {
   @IsOptional()
   status?: ProductStatus;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  category_id?: number;
+  category_id?: string;
 
   @IsArray()
-  @IsNumber({}, { each: true })
+  @IsString({ each: true })
   @IsOptional()
-  material_ids?: number[];
+  material_ids?: string[];
 }
 
 /**
@@ -87,14 +87,14 @@ export class UpdateProductDto {
   @IsOptional()
   status?: ProductStatus;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  category_id?: number;
+  category_id?: string;
 
   @IsArray()
-  @IsNumber({}, { each: true })
+  @IsString({ each: true })
   @IsOptional()
-  material_ids?: number[];
+  material_ids?: string[];
 }
 
 /**

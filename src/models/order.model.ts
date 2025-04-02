@@ -30,8 +30,8 @@ export class Order extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ nullable: false })
-  user_id!: number;
+  @Column({ type: 'varchar', length: 36, nullable: false })
+  user_id!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
   total_price!: number;
@@ -57,15 +57,15 @@ export class OrderItem extends BaseEntity {
   @JoinColumn({ name: 'product_id' })
   product!: Product;
 
-  @Column({ nullable: false })
-  product_id!: number;
+  @Column({ type: 'varchar', length: 36, nullable: false })
+  product_id!: string;
 
   @ManyToOne(() => Order, order => order.items, { nullable: false })
   @JoinColumn({ name: 'order_id' })
   order!: Order;
 
-  @Column({ nullable: false })
-  order_id!: number;
+  @Column({ type: 'varchar', length: 36, nullable: false })
+  order_id!: string;
 
   @Column({ type: 'int', nullable: false })
   quantity!: number;

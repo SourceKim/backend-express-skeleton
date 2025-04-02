@@ -54,7 +54,7 @@ export interface PaginatedResponse<T> {
  * 用于统一API响应格式
  */
 export interface ApiResponse<T> {
-    code: number; // 0: 成功, 其他: 失败
+    code: number; // 0 成功, 1 失败, 2 警告, 3 信息, 401 未授权, 403 禁止访问, 404 未找到, 500 服务器错误
     message?: string;
     data?: T;
     error?: any;

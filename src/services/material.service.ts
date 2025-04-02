@@ -1,13 +1,12 @@
-import { AppDataSource } from '@/configs/database.config';
-import { Material, MaterialType } from '@/models/material.model';
-import { Repository, FindOptionsWhere, Like, In } from 'typeorm';
-import { HttpException } from '@/exceptions/http.exception';
+import { Repository, In, Like, DataSource } from 'typeorm';
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
+import { Material, MaterialTag, MaterialCategory, MaterialType } from '@/models/material.model';
+import { HttpException } from '@/exceptions/http.exception';
+import { AppDataSource } from '@/configs/database.config';
 import { ENV } from '@/configs/env.config';
-import multer from 'multer';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -100,14 +99,21 @@ export class MaterialService {
     private readonly defaultUploadDir: string;
     /** 基础URL */
     private readonly baseUrl: string;
+    /** 数据源 */
+    private readonly dataSource: DataSource;
+    /** 生成ID的函数 */
+    private readonly generateId: () => string;
 
     /**
      * 构造函数
      */
     constructor() {
         this.materialRepository = AppDataSource.getRepository(Material);
+        this.dataSource = AppDataSource;
         this.defaultUploadDir = path.resolve(ENV.UPLOAD_DIR || './uploads');
         this.baseUrl = ENV.API_URL || 'http://localhost:3000';
+        // 初始化 nanoid，使用数字和小写字母
+        this.generateId = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 16);
         
         // 确保上传目录存在
         this.ensureUploadDirExists();
@@ -129,7 +135,7 @@ export class MaterialService {
      */
     private generateUniqueFilename(originalname: string): string {
         const timestamp = Date.now();
-        const random = nanoid(8);
+        const random = this.generateId();
         const ext = path.extname(originalname);
         return `${timestamp}_${random}${ext}`;
     }
@@ -223,6 +229,7 @@ export class MaterialService {
             
             // 创建素材记录
             const material = new Material();
+            material.id = this.generateId();
             material.filename = filename;
             material.originalname = file.originalname;
             material.path = relativePath;
@@ -238,39 +245,12 @@ export class MaterialService {
             material.metadata = options?.metadata;
             material.parent_id = options?.parent_id;
             
-            // 保存素材记录
-            return await this.materialRepository.save(material);
+            // 保存素材记录并返回完整的保存后的数据（包含ID等自动生成的字段）
+            const savedMaterial = await this.materialRepository.save(material);
+            return savedMaterial;
         } catch (error) {
             console.error('上传文件失败:', error);
             throw error instanceof HttpException ? error : new HttpException(500, '上传文件失败');
-        }
-    }
-
-    /**
-     * 创建文本素材
-     * @param options 文本素材选项
-     * @param user 当前用户
-     * @returns 创建的素材对象
-     */
-    public async createTextMaterial(options: TextMaterialOptions, user?: any): Promise<Material> {
-        try {
-            // 创建素材记录
-            const material = new Material();
-            material.type = 'text';
-            material.description = options.content;
-            material.size = options.content.length;
-            material.category = options.category;
-            material.is_public = options.is_public || false;
-            material.user = user;
-            material.tags = options.tags;
-            material.metadata = options.metadata;
-            material.parent_id = options.parent_id;
-            
-            // 保存素材记录
-            return await this.materialRepository.save(material);
-        } catch (error) {
-            console.error('创建文本素材失败:', error);
-            throw error instanceof HttpException ? error : new HttpException(500, '创建文本素材失败');
         }
     }
 
@@ -393,15 +373,14 @@ export class MaterialService {
     }
 
     /**
-     * 获取单个素材
+     * 获取单个素材详情
      * @param id 素材ID
      * @returns 素材对象
      */
     public async getMaterialById(id: string): Promise<Material> {
         try {
             const material = await this.materialRepository.findOne({ 
-                where: { id },
-                relations: ['user', 'related_materials']
+                where: { id }
             });
             
             if (!material) {
@@ -410,8 +389,8 @@ export class MaterialService {
             
             return material;
         } catch (error) {
-            console.error('获取素材失败:', error);
-            throw error instanceof HttpException ? error : new HttpException(500, '获取素材失败');
+            console.error('获取素材详情失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '获取素材详情失败');
         }
     }
 
@@ -499,29 +478,6 @@ export class MaterialService {
     }
 
     /**
-     * 获取素材的相关素材
-     * @param id 素材ID
-     * @returns 相关素材列表
-     */
-    public async getRelatedMaterials(id: string): Promise<Material[]> {
-        try {
-            const material = await this.materialRepository.findOne({ 
-                where: { id },
-                relations: ['related_materials']
-            });
-            
-            if (!material) {
-                throw new HttpException(404, '素材不存在');
-            }
-            
-            return material.related_materials || [];
-        } catch (error) {
-            console.error('获取相关素材失败:', error);
-            throw error instanceof HttpException ? error : new HttpException(500, '获取相关素材失败');
-        }
-    }
-
-    /**
      * 获取素材的版本历史
      * @param id 素材ID
      * @returns 版本历史列表
@@ -538,6 +494,508 @@ export class MaterialService {
         } catch (error) {
             console.error('获取素材版本历史失败:', error);
             throw error instanceof HttpException ? error : new HttpException(500, '获取素材版本历史失败');
+        }
+    }
+
+    /**
+     * 获取所有分类及其素材数量
+     * @returns 分类列表及素材数量
+     */
+    public async getAllCategories(): Promise<{ name: string; description?: string; count: number }[]> {
+        try {
+            // 使用原生SQL查询所有不为空的分类及其素材数量
+            const categoriesWithCount = await this.materialRepository.query(`
+                SELECT 
+                    category as name, 
+                    COUNT(*) as count
+                FROM 
+                    materials
+                WHERE 
+                    category IS NOT NULL 
+                    AND category != ''
+                GROUP BY 
+                    category
+                ORDER BY 
+                    count DESC, 
+                    category ASC
+            `);
+
+            return categoriesWithCount;
+        } catch (error) {
+            console.error('获取所有分类失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '获取所有分类失败');
+        }
+    }
+
+    /**
+     * 创建或更新分类（批量更新素材分类）
+     * @param oldName 旧分类名称
+     * @param newName 新分类名称
+     * @param description 分类描述（保存到相应素材的metadata.categoryDescription中）
+     * @returns 更新的素材数量和更新后的素材列表
+     */
+    public async createOrUpdateCategory(oldName: string, newName: string, description?: string): Promise<{ count: number; materials: Material[] }> {
+        try {
+            if (!newName) {
+                throw new HttpException(400, '分类名称不能为空');
+            }
+
+            // 查找所有属于旧分类的素材
+            const materials = await this.materialRepository.find({
+                where: { category: oldName }
+            });
+
+            // 批量更新素材的分类
+            for (const material of materials) {
+                material.category = newName;
+                
+                // 将分类描述保存到素材的metadata中
+                if (description) {
+                    if (!material.metadata) {
+                        material.metadata = {};
+                    }
+                    material.metadata.categoryDescription = description;
+                }
+            }
+
+            // 保存更新
+            let updatedMaterials: Material[] = [];
+            if (materials.length > 0) {
+                updatedMaterials = await this.materialRepository.save(materials);
+            }
+
+            return { count: materials.length, materials: updatedMaterials };
+        } catch (error) {
+            console.error('创建或更新分类失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '创建或更新分类失败');
+        }
+    }
+
+    /**
+     * 删除分类（清空相应素材的分类字段）
+     * @param name 分类名称
+     * @returns 更新的素材数量
+     */
+    public async deleteCategory(name: string): Promise<number> {
+        try {
+            if (!name) {
+                throw new HttpException(400, '分类名称不能为空');
+            }
+
+            // 更新所有该分类的素材，将分类设为空字符串
+            const result = await this.materialRepository.update(
+                { category: name },
+                { category: '' }
+            );
+
+            return result.affected || 0;
+        } catch (error) {
+            console.error('删除分类失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '删除分类失败');
+        }
+    }
+
+    /**
+     * 根据分类和标签获取素材
+     * @param category 分类名称
+     * @param tags 标签数组
+     * @param isPublic 是否公开
+     * @param page 页码
+     * @param limit 每页条数
+     * @param sortBy 排序字段
+     * @param sortOrder 排序方向
+     * @returns 素材列表和总数
+     */
+    public async getMaterialsByCategoryAndTags(
+        category?: string,
+        tags?: string[],
+        isPublic?: boolean,
+        page = 1,
+        limit = 20,
+        sortBy: string = 'created_at',
+        sortOrder: 'ASC' | 'DESC' = 'DESC'
+    ) {
+        try {
+            const queryBuilder = this.materialRepository.createQueryBuilder('material');
+            
+            // 构建查询条件
+            if (category) {
+                queryBuilder.andWhere('material.category = :category', { category });
+            }
+            
+            if (tags && tags.length > 0) {
+                // 查找包含任一标签的素材
+                const tagConditions = tags.map((tag, index) => {
+                    const paramName = `tag${index}`;
+                    queryBuilder.setParameter(paramName, `"${tag}"`);
+                    return `JSON_CONTAINS(material.tags, :${paramName})`;
+                }).join(' OR ');
+                
+                queryBuilder.andWhere(`(${tagConditions})`);
+            }
+            
+            if (isPublic !== undefined) {
+                queryBuilder.andWhere('material.is_public = :isPublic', { isPublic });
+            }
+            
+            // 排序
+            queryBuilder.orderBy(`material.${sortBy}`, sortOrder);
+            
+            // 分页
+            const [items, total] = await queryBuilder
+                .skip((page - 1) * limit)
+                .take(limit)
+                .getManyAndCount();
+                
+            return { items, total };
+        } catch (error) {
+            console.error('根据分类和标签获取素材失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '根据分类和标签获取素材失败');
+        }
+    }
+
+    /**
+     * 更新素材标签
+     * @param id 标签ID
+     * @param name 新的标签名称
+     * @param description 新的标签描述
+     * @returns 更新后的标签
+     */
+    public async updateMaterialTag(id: string, name: string, description?: string): Promise<MaterialTag> {
+        try {
+            // 获取标签仓库
+            const materialTagRepository = this.dataSource.getRepository(MaterialTag);
+
+            // 查找指定的标签
+            const tag = await materialTagRepository.findOne({
+                where: { id }
+            });
+
+            if (!tag) {
+                throw new HttpException(404, `标签不存在`);
+            }
+
+            // 如果更新名称，需要检查是否有同名的标签
+            if (name !== tag.name) {
+                const existingTag = await materialTagRepository.findOne({
+                    where: { name }
+                });
+
+                if (existingTag) {
+                    throw new HttpException(409, `标签 "${name}" 已存在`);
+                }
+            }
+
+            // 更新标签
+            tag.name = name;
+            if (description !== undefined) {
+                tag.description = description;
+            }
+
+            // 保存更新
+            return await materialTagRepository.save(tag);
+        } catch (error) {
+            console.error('更新标签失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '更新标签失败');
+        }
+    }
+
+    /**
+     * 删除标签（从所有素材中移除指定标签）
+     * @param name 标签名称
+     * @returns 更新的素材数量和更新后的素材列表
+     */
+    public async deleteTag(name: string): Promise<{ count: number; materials: Material[] }> {
+        try {
+            if (!name) {
+                throw new HttpException(400, '标签名称不能为空');
+            }
+
+            // 查找所有包含该标签的素材
+            const materialsWithTag = await this.materialRepository.createQueryBuilder('material')
+                .where(`JSON_CONTAINS(material.tags, :tag)`, { tag: `"${name}"` })
+                .getMany();
+
+            // 从每个素材中移除标签
+            let updatedCount = 0;
+            const updatedMaterials: Material[] = [];
+            
+            for (const material of materialsWithTag) {
+                if (material.tags && material.tags.includes(name)) {
+                    material.tags = material.tags.filter(tag => tag !== name);
+                    updatedCount++;
+                    updatedMaterials.push(material);
+                }
+            }
+
+            // 保存更新
+            let savedMaterials: Material[] = [];
+            if (updatedMaterials.length > 0) {
+                savedMaterials = await this.materialRepository.save(updatedMaterials);
+            }
+
+            return { count: updatedCount, materials: savedMaterials };
+        } catch (error) {
+            console.error('删除标签失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '删除标签失败');
+        }
+    }
+
+    /**
+     * 创建新的素材标签
+     * @param name 标签名称
+     * @param description 标签描述
+     * @returns 创建的标签
+     */
+    public async createTag(name: string, description?: string): Promise<MaterialTag> {
+        try {
+            if (!name) {
+                throw new HttpException(400, '标签名称不能为空');
+            }
+
+            // 获取标签仓库
+            const materialTagRepository = this.dataSource.getRepository(MaterialTag);
+
+            // 检查标签是否已存在
+            const existingTag = await materialTagRepository.findOne({
+                where: { name }
+            });
+
+            if (existingTag) {
+                throw new HttpException(409, `标签 "${name}" 已存在`);
+            }
+
+            // 创建新标签
+            const tag = new MaterialTag();
+            tag.id = this.generateId();
+            tag.name = name;
+            tag.description = description;
+
+            // 保存标签
+            return await materialTagRepository.save(tag);
+        } catch (error) {
+            console.error('创建标签失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '创建标签失败');
+        }
+    }
+
+    /**
+     * 创建新的素材分类
+     * @param name 分类名称
+     * @param description 分类描述
+     * @returns 创建的分类
+     */
+    public async createCategory(name: string, description?: string): Promise<MaterialCategory> {
+        try {
+            if (!name) {
+                throw new HttpException(400, '分类名称不能为空');
+            }
+
+            // 获取分类仓库
+            const materialCategoryRepository = this.dataSource.getRepository(MaterialCategory);
+
+            // 检查分类是否已存在
+            const existingCategory = await materialCategoryRepository.findOne({
+                where: { name }
+            });
+
+            if (existingCategory) {
+                throw new HttpException(409, `分类 "${name}" 已存在`);
+            }
+
+            // 创建新分类
+            const category = new MaterialCategory();
+            category.id = this.generateId();
+            category.name = name;
+            category.description = description;
+
+            // 保存分类
+            return await materialCategoryRepository.save(category);
+        } catch (error) {
+            console.error('创建分类失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '创建分类失败');
+        }
+    }
+
+    /**
+     * 更新素材分类
+     * @param id 分类ID
+     * @param name 新的分类名称
+     * @param description 新的分类描述
+     * @returns 更新后的分类
+     */
+    public async updateCategory(id: string, name: string, description?: string): Promise<MaterialCategory> {
+        try {
+            // 获取分类仓库
+            const materialCategoryRepository = this.dataSource.getRepository(MaterialCategory);
+
+            // 查找指定的分类
+            const category = await materialCategoryRepository.findOne({
+                where: { id }
+            });
+
+            if (!category) {
+                throw new HttpException(404, `分类不存在`);
+            }
+
+            // 如果更新名称，需要检查是否有同名的分类
+            if (name !== category.name) {
+                const existingCategory = await materialCategoryRepository.findOne({
+                    where: { name }
+                });
+
+                if (existingCategory) {
+                    throw new HttpException(409, `分类 "${name}" 已存在`);
+                }
+            }
+
+            // 更新分类
+            category.name = name;
+            if (description !== undefined) {
+                category.description = description;
+            }
+
+            // 保存更新
+            return await materialCategoryRepository.save(category);
+        } catch (error) {
+            console.error('更新分类失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '更新分类失败');
+        }
+    }
+
+    /**
+     * 获取所有素材分类及其素材数量
+     * @returns 分类列表及素材数量
+     */
+    public async getAllMaterialCategories(): Promise<MaterialCategory[]> {
+        try {
+            // 获取分类仓库
+            const materialCategoryRepository = this.dataSource.getRepository(MaterialCategory);
+
+            // 查询所有分类
+            const categories = await materialCategoryRepository.find();
+
+            // 为每个分类计算素材数量
+            for (const category of categories) {
+                const count = await this.materialRepository.count({
+                    where: { materialCategoryId: category.id }
+                });
+                (category as any).count = count;
+            }
+
+            return categories;
+        } catch (error) {
+            console.error('获取所有素材分类失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '获取所有素材分类失败');
+        }
+    }
+
+    /**
+     * 获取所有素材标签及其素材数量
+     * @returns 标签列表及素材数量
+     */
+    public async getAllMaterialTags(): Promise<MaterialTag[]> {
+        try {
+            // 获取标签仓库
+            const materialTagRepository = this.dataSource.getRepository(MaterialTag);
+
+            // 查询所有标签
+            const tags = await materialTagRepository.find();
+
+            // 为每个标签计算素材数量
+            for (const tag of tags) {
+                const count = await this.dataSource.createQueryBuilder()
+                    .select('COUNT(mtt.material_id)', 'count')
+                    .from('material_to_tags', 'mtt')
+                    .where('mtt.tag_id = :tagId', { tagId: tag.id })
+                    .getRawOne();
+                
+                (tag as any).count = count ? parseInt(count.count) : 0;
+            }
+
+            return tags;
+        } catch (error) {
+            console.error('获取所有素材标签失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '获取所有素材标签失败');
+        }
+    }
+
+    /**
+     * 删除素材分类
+     * @param id 分类ID
+     * @returns 删除的分类
+     */
+    public async deleteMaterialCategory(id: string): Promise<MaterialCategory> {
+        try {
+            // 获取分类仓库
+            const materialCategoryRepository = this.dataSource.getRepository(MaterialCategory);
+
+            // 查找指定的分类
+            const category = await materialCategoryRepository.findOne({
+                where: { id }
+            });
+
+            if (!category) {
+                throw new HttpException(404, `分类不存在`);
+            }
+
+            // 查找使用该分类的素材
+            const materialsWithCategory = await this.materialRepository.find({
+                where: { materialCategoryId: id }
+            });
+
+            // 清除素材的分类关联
+            if (materialsWithCategory.length > 0) {
+                for (const material of materialsWithCategory) {
+                    material.materialCategoryId = undefined;
+                    material.materialCategory = undefined;
+                }
+                await this.materialRepository.save(materialsWithCategory);
+            }
+
+            // 删除分类
+            await materialCategoryRepository.remove(category);
+
+            return category;
+        } catch (error) {
+            console.error('删除分类失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '删除分类失败');
+        }
+    }
+
+    /**
+     * 删除素材标签
+     * @param id 标签ID
+     * @returns 删除的标签
+     */
+    public async deleteMaterialTag(id: string): Promise<MaterialTag> {
+        try {
+            // 获取标签仓库
+            const materialTagRepository = this.dataSource.getRepository(MaterialTag);
+
+            // 查找指定的标签
+            const tag = await materialTagRepository.findOne({
+                where: { id }
+            });
+
+            if (!tag) {
+                throw new HttpException(404, `标签不存在`);
+            }
+
+            // 删除素材-标签关联
+            await this.dataSource.createQueryBuilder()
+                .delete()
+                .from('material_to_tags')
+                .where('tag_id = :tagId', { tagId: id })
+                .execute();
+
+            // 删除标签
+            await materialTagRepository.remove(tag);
+
+            return tag;
+        } catch (error) {
+            console.error('删除标签失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '删除标签失败');
         }
     }
 } 

@@ -33,7 +33,7 @@ export const ENV = {
   NODE_ENV,
   PORT: process.env.PORT || '3000',
   API_BASE_URL: process.env.API_BASE_URL || '/api/v1',
-  CORS_ORIGINS: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:8000', 'http://127.0.0.1:8000'],
+  CORS_ORIGINS: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:5173', 'http://127.0.0.1:5173'],
   CORS_METHODS: process.env.CORS_METHODS ? process.env.CORS_METHODS.split(',') : ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   CORS_HEADERS: process.env.CORS_HEADERS ? process.env.CORS_HEADERS.split(',') : ['Content-Type', 'Authorization'],
   UPLOADS_PATH: process.env.UPLOADS_PATH || '/uploads',

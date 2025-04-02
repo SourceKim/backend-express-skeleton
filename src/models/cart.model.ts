@@ -12,8 +12,8 @@ export class Cart extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ nullable: false })
-  user_id!: number;
+  @Column({ type: 'varchar', length: 36, nullable: false })
+  user_id!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false, default: 0 })
   total_price!: number;
@@ -31,15 +31,15 @@ export class CartItem extends BaseEntity {
   @JoinColumn({ name: 'product_id' })
   product!: Product;
 
-  @Column({ nullable: false })
-  product_id!: number;
+  @Column({ type: 'varchar', length: 36, nullable: false })
+  product_id!: string;
 
   @ManyToOne(() => Cart, cart => cart.items, { nullable: false })
   @JoinColumn({ name: 'cart_id' })
   cart!: Cart;
 
-  @Column({ nullable: false })
-  cart_id!: number;
+  @Column({ type: 'varchar', length: 36, nullable: false })
+  cart_id!: string;
 
   @Column({ type: 'int', nullable: false })
   quantity!: number;

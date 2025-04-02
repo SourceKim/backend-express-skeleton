@@ -7,9 +7,8 @@ import { PaginationQueryDto } from './common.dto';
  * 订单项 DTO
  */
 export class OrderItemDto {
-  @IsInt()
-  @IsPositive()
-  product_id!: number;
+  @IsString()
+  product_id!: string;
 
   @IsInt()
   @IsPositive()
@@ -54,10 +53,9 @@ export class OrderQueryDto extends PaginationQueryDto {
   @IsOptional()
   status?: OrderStatus;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  @Type(() => Number)
-  user_id?: number;
+  user_id?: string;
 
   @IsString()
   @IsOptional()

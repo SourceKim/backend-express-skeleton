@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 import { User } from '@/models/user.model';
 import { IsString, IsInt, IsBoolean, IsOptional, IsUUID, IsEnum, Min, MaxLength } from 'class-validator';
 import { BaseEntity } from '@/models/base.model';
@@ -12,6 +12,74 @@ import { BaseEntity } from '@/models/base.model';
  * other: 其他类型素材
  */
 export type MaterialType = 'image' | 'audio' | 'video' | 'document' | 'text' | 'other';
+
+/**
+ * 素材分类实体
+ * 用于管理素材的分类
+ */
+@Entity('material_categories')
+export class MaterialCategory extends BaseEntity {
+    /**
+     * 分类名称
+     */
+    @Column({ type: 'varchar', length: 50, unique: true })
+    @IsString()
+    @MaxLength(50, { message: '分类名称不能超过50个字符' })
+    name!: string;
+
+    /**
+     * 分类描述
+     */
+    @Column({ type: 'varchar', length: 200, nullable: true })
+    @IsOptional()
+    @IsString()
+    @MaxLength(200, { message: '分类描述不能超过200个字符' })
+    description?: string;
+
+    /**
+     * 该分类下的所有素材
+     */
+    @OneToMany(() => Material, material => material.materialCategory)
+    materials!: Material[];
+
+    constructor(partial: Partial<MaterialCategory> = {}) {
+        super(partial);
+    }
+}
+
+/**
+ * 素材标签实体
+ * 用于管理素材的标签
+ */
+@Entity('material_tags')
+export class MaterialTag extends BaseEntity {
+    /**
+     * 标签名称
+     */
+    @Column({ type: 'varchar', length: 50, unique: true })
+    @IsString()
+    @MaxLength(50, { message: '标签名称不能超过50个字符' })
+    name!: string;
+
+    /**
+     * 标签描述
+     */
+    @Column({ type: 'varchar', length: 200, nullable: true })
+    @IsOptional()
+    @IsString()
+    @MaxLength(200, { message: '标签描述不能超过200个字符' })
+    description?: string;
+
+    /**
+     * 使用该标签的素材
+     */
+    @ManyToMany(() => Material, material => material.materialTags)
+    materials!: Material[];
+
+    constructor(partial: Partial<MaterialTag> = {}) {
+        super(partial);
+    }
+}
 
 /**
  * 素材实体类
@@ -89,12 +157,26 @@ export class Material extends BaseEntity {
     /**
      * 素材分类
      * 用于对素材进行分类管理
+     * @deprecated 使用materialCategory替代
      */
     @Column({ type: 'varchar', length: 50, nullable: true })
     @IsOptional()
     @IsString()
     @MaxLength(50, { message: '分类长度不能超过50个字符' })
     category?: string;
+
+    /**
+     * 素材分类关联
+     * 通过外键关联到分类表
+     */
+    @ManyToOne(() => MaterialCategory, category => category.materials, { nullable: true })
+    @JoinColumn({ name: 'material_category_id' })
+    materialCategory?: MaterialCategory;
+
+    @Column({ name: 'material_category_id', type: 'varchar', length: 36, nullable: true })
+    @IsOptional()
+    @IsString()
+    materialCategoryId?: string;
 
     /**
      * 素材描述
@@ -135,10 +217,29 @@ export class Material extends BaseEntity {
     /**
      * 素材标签
      * 以JSON数组形式存储
+     * @deprecated 使用materialTags替代
      */
     @Column({ type: 'json', nullable: true })
     @IsOptional()
     tags?: string[];
+
+    /**
+     * 素材标签关联
+     * 通过多对多关系关联到标签表
+     */
+    @ManyToMany(() => MaterialTag, tag => tag.materials)
+    @JoinTable({
+        name: 'material_to_tags',
+        joinColumn: {
+            name: 'material_id',
+            referencedColumnName: 'id'
+        },
+        inverseJoinColumn: {
+            name: 'tag_id',
+            referencedColumnName: 'id'
+        }
+    })
+    materialTags?: MaterialTag[];
 
     /**
      * 素材元数据
@@ -156,13 +257,6 @@ export class Material extends BaseEntity {
     @IsOptional()
     @IsString()
     parent_id?: string;
-
-    /**
-     * 关联的素材列表
-     * 用于关联到其他素材
-     */
-    @OneToMany(() => Material, material => material.parent_id)
-    related_materials?: Material[];
 
     constructor(partial: Partial<Material> = {}) {
         super(partial);

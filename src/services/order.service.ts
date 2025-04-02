@@ -5,16 +5,23 @@ import { CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto } from '@/dtos/orde
 import { PaginatedResponse } from '@/dtos/common.dto';
 import { FindOptionsWhere, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { customAlphabet } from 'nanoid';
 
 export class OrderService {
   private orderRepository = AppDataSource.getRepository(Order);
   private orderItemRepository = AppDataSource.getRepository(OrderItem);
   private productRepository = AppDataSource.getRepository(Product);
+  private readonly generateId: () => string;
+
+  constructor() {
+    // 生成16位随机ID的函数
+    this.generateId = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 16);
+  }
 
   /**
    * 创建订单
    */
-  async createOrder(userId: number, createOrderDto: CreateOrderDto): Promise<Order> {
+  async createOrder(userId: string, createOrderDto: CreateOrderDto): Promise<Order> {
     // 开启事务
     return await AppDataSource.transaction(async (transactionalEntityManager) => {
       // 1. 验证商品是否存在并计算总价
@@ -44,6 +51,7 @@ export class OrderService {
         
         // 创建订单项
         const orderItem = new OrderItem();
+        orderItem.id = this.generateId();
         orderItem.product_id = item.product_id;
         orderItem.quantity = item.quantity;
         orderItem.price = product.price;
@@ -52,6 +60,7 @@ export class OrderService {
       
       // 2. 创建订单
       const order = new Order();
+      order.id = this.generateId();
       order.order_number = uuidv4();
       order.user_id = userId;
       order.total_price = totalPrice;
@@ -63,7 +72,7 @@ export class OrderService {
       
       // 4. 保存订单项
       for (const item of orderItems) {
-        item.order_id = Number(savedOrder.id);
+        item.order_id = savedOrder.id;
         await transactionalEntityManager.save(item);
       }
       
@@ -78,7 +87,7 @@ export class OrderService {
   /**
    * 更新订单状态
    */
-  async updateOrderStatus(id: number, updateOrderStatusDto: UpdateOrderStatusDto): Promise<Order> {
+  async updateOrderStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id: id as any }
     });
@@ -123,12 +132,12 @@ export class OrderService {
   /**
    * 获取单个订单
    */
-  async getOrderById(id: number, userId?: number): Promise<Order> {
+  async getOrderById(id: string, userId?: string): Promise<Order> {
     const where: FindOptionsWhere<Order> = { id: id as any };
     
     // 如果提供了用户ID，则只能查询自己的订单
     if (userId) {
-      where.user_id = userId as any;
+      where.user_id = userId;
     }
     
     const order = await this.orderRepository.findOne({
@@ -146,7 +155,7 @@ export class OrderService {
   /**
    * 获取订单列表
    */
-  async getOrders(query: OrderQueryDto, userId?: number): Promise<PaginatedResponse<Order>> {
+  async getOrders(query: OrderQueryDto, userId?: string): Promise<PaginatedResponse<Order>> {
     const { page = 1, limit = 20, order_number, status, start_date, end_date, min_price, max_price } = query;
     
     // 构建查询条件
@@ -154,9 +163,9 @@ export class OrderService {
     
     // 如果提供了用户ID，则只能查询自己的订单
     if (userId) {
-      where.user_id = userId as any;
+      where.user_id = userId;
     } else if (query.user_id) {
-      where.user_id = query.user_id as any;
+      where.user_id = query.user_id;
     }
     
     if (order_number) {
@@ -191,7 +200,7 @@ export class OrderService {
     // 查询数据
     const orders = await this.orderRepository.find({
       where,
-      relations: ['items'],
+      relations: ['items', 'items.product'],
       skip: (page - 1) * limit,
       take: limit,
       order: {
@@ -216,7 +225,7 @@ export class OrderService {
   /**
    * 取消订单
    */
-  async cancelOrder(id: number, userId: number): Promise<Order> {
+  async cancelOrder(id: string, userId: string): Promise<Order> {
     return await AppDataSource.transaction(async (transactionalEntityManager) => {
       // 查询订单
       const order = await this.orderRepository.findOne({

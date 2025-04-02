@@ -1,27 +1,41 @@
 import { AppDataSource } from '@/configs/database.config';
-import { Category, Product, ProductStatus } from '@/models/product.model';
+import { Product, ProductStatus, ProductCategory } from '@/models/product.model';
 import { CreateCategoryDto, UpdateCategoryDto, CreateProductDto, UpdateProductDto, ProductQueryDto } from '@/dtos/product.dto';
 import { Material } from '@/models/material.model';
 import { PaginatedResponse } from '@/dtos/common.dto';
 import { Like, Between, FindOptionsWhere, In } from 'typeorm';
+import { customAlphabet } from 'nanoid';
 
 export class ProductService {
   private productRepository = AppDataSource.getRepository(Product);
-  private categoryRepository = AppDataSource.getRepository(Category);
+  private categoryRepository = AppDataSource.getRepository(ProductCategory);
   private materialRepository = AppDataSource.getRepository(Material);
+  private readonly generateId: () => string;
+
+  constructor() {
+    // 生成16位随机ID的函数
+    this.generateId = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 16);
+  }
 
   /**
    * 创建商品分类
    */
-  async createCategory(createCategoryDto: CreateCategoryDto): Promise<Category> {
-    const category = this.categoryRepository.create(createCategoryDto);
+  async createCategory(createCategoryDto: CreateCategoryDto): Promise<ProductCategory> {
+    if (!createCategoryDto.name) {
+      throw new Error('分类名称不能为空');
+    }
+    
+    const category = new ProductCategory();
+    category.id = this.generateId();
+    category.name = createCategoryDto.name;
+    category.description = createCategoryDto.description || '';
     return await this.categoryRepository.save(category);
   }
 
   /**
    * 更新商品分类
    */
-  async updateCategory(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+  async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto): Promise<ProductCategory> {
     const category = await this.categoryRepository.findOne({
       where: { id: id as any }
     });
@@ -37,7 +51,7 @@ export class ProductService {
   /**
    * 删除商品分类
    */
-  async deleteCategory(id: number): Promise<void> {
+  async deleteCategory(id: string): Promise<void> {
     const category = await this.categoryRepository.findOne({
       where: { id: id as any },
       relations: ['products']
@@ -57,14 +71,39 @@ export class ProductService {
   /**
    * 获取所有商品分类
    */
-  async getAllCategories(): Promise<Category[]> {
-    return await this.categoryRepository.find();
+  async getAllCategories(page: number = 1, limit: number = 20, sort_by: string = 'created_at', sort_order: 'ASC' | 'DESC' = 'DESC'): Promise<PaginatedResponse<ProductCategory>> {
+    // 使用QueryBuilder进行分页查询
+    const queryBuilder = this.categoryRepository.createQueryBuilder('category');
+    
+    // 排序
+    queryBuilder.orderBy(`category.${sort_by}`, sort_order);
+    
+    // 分页
+    const [categories, total] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+    
+    // 计算总页数
+    const pages = Math.ceil(total / limit);
+    
+    return {
+      items: categories,
+      meta: {
+        total,
+        page,
+        limit,
+        pages,
+        sort_by,
+        sort_order
+      }
+    };
   }
 
   /**
    * 获取单个商品分类
    */
-  async getCategoryById(id: number): Promise<Category> {
+    async getCategoryById(id: string): Promise<ProductCategory> {
     const category = await this.categoryRepository.findOne({
       where: { id: id as any }
     });
@@ -79,10 +118,21 @@ export class ProductService {
    * 创建商品
    */
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
+    if (!createProductDto.name) {
+      throw new Error('商品名称不能为空');
+    }
+    
     const { material_ids, ...productData } = createProductDto;
     
     // 创建商品
-    const product = this.productRepository.create(productData);
+    const product = new Product();
+    product.id = this.generateId();
+    product.name = productData.name;
+    product.description = productData.description || '';
+    product.price = productData.price;
+    product.stock = productData.stock;
+    product.status = productData.status || ProductStatus.ACTIVE;
+    product.category_id = productData.category_id || '';
     
     // 保存商品
     const savedProduct = await this.productRepository.save(product);
@@ -90,7 +140,7 @@ export class ProductService {
     // 如果有素材ID，关联素材
     if (material_ids && material_ids.length > 0) {
       const materials = await this.materialRepository.findBy({
-        id: In(material_ids as any[])
+        id: In(material_ids)
       });
       savedProduct.materials = materials;
       await this.productRepository.save(savedProduct);
@@ -102,7 +152,7 @@ export class ProductService {
   /**
    * 更新商品
    */
-  async updateProduct(id: number, updateProductDto: UpdateProductDto): Promise<Product> {
+    async updateProduct(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
     const { material_ids, ...productData } = updateProductDto;
     
     // 查找商品
@@ -132,7 +182,7 @@ export class ProductService {
   /**
    * 删除商品
    */
-  async deleteProduct(id: number): Promise<void> {
+  async deleteProduct(id: string): Promise<void> {
     const product = await this.productRepository.findOne({
       where: { id: id as any }
     });
@@ -147,7 +197,7 @@ export class ProductService {
   /**
    * 获取单个商品
    */
-  async getProductById(id: number): Promise<Product> {
+  async getProductById(id: string): Promise<Product> {
     const product = await this.productRepository.findOne({
       where: { id: id as any },
       relations: ['category', 'materials']

@@ -147,4 +147,54 @@ export class AuthService {
         };
         return sanitizedUser;
     }
+
+    async loginWithToken(token: string): Promise<{ user: Partial<User>; access_token: string }> {
+        try {
+            if (!process.env.JWT_SECRET) {
+                throw new Error('JWT_SECRET not configured');
+            }
+
+            // 验证令牌
+            const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string; username: string };
+            
+            // 查找用户
+            const user = await this.userRepository.findOne({
+                where: { id: decoded.id },
+                select: ['id', 'username', 'email', 'phone', 'avatar', 'status', 'bio', 'password'],
+                relations: ['roles', 'roles.permissions']
+            });
+            
+            if (!user) {
+                throw new HttpException(401, '用户不存在');
+            }
+
+            if (user.status === 'inactive') {
+                throw new HttpException(403, '账户已被禁用');
+            }
+
+            // 生成新的访问令牌
+            const accessToken = this.generateToken(user);
+            
+            // 返回用户信息和新令牌
+            return { 
+                user: this.sanitizeUser(user), 
+                access_token: accessToken 
+            };
+        } catch (error) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
+            
+            // 处理 JWT 验证错误
+            if (error instanceof jwt.JsonWebTokenError) {
+                throw new HttpException(401, '无效的认证令牌');
+            }
+            
+            if (error instanceof jwt.TokenExpiredError) {
+                throw new HttpException(401, '认证令牌已过期');
+            }
+            
+            throw new HttpException(401, '认证失败');
+        }
+    }
 } 

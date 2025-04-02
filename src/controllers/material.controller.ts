@@ -5,17 +5,16 @@ import fs from 'fs';
 import { MaterialService } from '@/services/material.service';
 import {
     CreateMaterialDto,
-    CreateTextMaterialDto,
     UpdateMaterialDto,
     GetMaterialsQueryDto,
     MaterialDto,
     PaginatedMaterialsResponse,
-    BatchDeleteMaterialsDto
+    BatchDeleteMaterialsDto,
+    MaterialTagDto,
+    MaterialCategoryDto,
 } from '@/dtos/material.dto';
 import { HttpException } from '@/exceptions/http.exception';
-import { PaginationQueryDto, ApiResponse } from '@/dtos/common.dto';
-import { MaterialType } from '@/models/material.model';
-import { User } from '@/models/user.model';
+import { PaginationQueryDto, ApiResponse, PaginatedResponse } from '@/dtos/common.dto';
 import { ENV } from '@/configs/env.config';
 
 /**
@@ -52,10 +51,12 @@ export class MaterialController {
     }
 
     /**
-     * 将Material模型转换为MaterialDto
+     * 将材料对象转换为DTO
+     * @param material 材料对象
+     * @returns DTO对象
      */
     private transformToDto(material: any): MaterialDto {
-        return {
+        const dto: MaterialDto = {
             id: material.id,
             filename: material.filename,
             originalname: material.originalname,
@@ -67,17 +68,27 @@ export class MaterialController {
             description: material.description,
             is_public: material.is_public,
             upload_dir: material.upload_dir,
-            user: material.user ? {
-                id: material.user.id,
-                username: material.user.username
-            } : undefined,
             tags: material.tags,
             metadata: material.metadata,
             parent_id: material.parent_id,
-            url: material.path ? `${ENV.API_URL}${ENV.UPLOADS_PATH}/${material.path}` : undefined,
             created_at: material.created_at,
             updated_at: material.updated_at
         };
+
+        // 添加URL
+        if (material.path) {
+            dto.url = `${ENV.API_URL}/uploads/${material.path}`;
+        }
+
+        // 添加用户信息
+        if (material.user) {
+            dto.user = {
+                id: material.user.id,
+                username: material.user.username
+            };
+        }
+
+        return dto;
     }
 
     /**
@@ -87,9 +98,10 @@ export class MaterialController {
     public uploadMaterial = async (req: any, res: Response<ApiResponse<MaterialDto>>, next: NextFunction): Promise<void> => {
         try {
             // 使用multer中间件处理文件上传
-            this.upload.single('file')(req, res, async (err) => {
+            this.upload.single('file[0][raw]')(req, res, async (err) => {
                 try {
                     if (err) {
+                        console.log('上传错误', err);
                         if (err instanceof multer.MulterError) {
                             if (err.code === 'LIMIT_FILE_SIZE') {
                                 throw new HttpException(400, `文件大小超过限制 (${ENV.MAX_FILE_SIZE / 1024 / 1024}MB)`);
@@ -106,11 +118,15 @@ export class MaterialController {
                     const materialData: CreateMaterialDto = {
                         category: req.body.category,
                         description: req.body.description,
-                        is_public: req.body.is_public === 'true',
-                        tags: req.body.tags ? JSON.parse(req.body.tags) : undefined,
-                        metadata: req.body.metadata ? JSON.parse(req.body.metadata) : undefined,
-                        parent_id: req.body.parent_id
+                        is_public: req.body.is_public ? req.body.is_public === 'true' : undefined,
+                        tags: req.body.tags ? (typeof req.body.tags === 'string' ? 
+                            (req.body.tags.startsWith('[') ? JSON.parse(req.body.tags) : [req.body.tags]) : 
+                            req.body.tags) : undefined,
+                        metadata: req.body.metadata ? (typeof req.body.metadata === 'string' ? 
+                            JSON.parse(req.body.metadata) : req.body.metadata) : undefined,
                     };
+
+                    console.log('materialData', materialData);
 
                     // 上传文件并创建素材记录
                     const material = await this.materialService.uploadFile(req.file, req.user, materialData);
@@ -124,96 +140,6 @@ export class MaterialController {
                 } catch (error) {
                     next(error);
                 }
-            });
-        } catch (error) {
-            next(error);
-        }
-    };
-
-    /**
-     * 批量上传素材文件
-     * POST /api/v1/materials/upload/batch
-     */
-    public uploadMaterialsBatch = async (req: any, res: Response<ApiResponse<MaterialDto[]>>, next: NextFunction): Promise<void> => {
-        try {
-            // 使用multer中间件处理多文件上传
-            this.upload.array('files', 10)(req, res, async (err) => {
-                try {
-                    if (err) {
-                        if (err instanceof multer.MulterError) {
-                            if (err.code === 'LIMIT_FILE_SIZE') {
-                                throw new HttpException(400, `文件大小超过限制 (${ENV.MAX_FILE_SIZE / 1024 / 1024}MB)`);
-                            }
-                            if (err.code === 'LIMIT_FILE_COUNT') {
-                                throw new HttpException(400, '文件数量超过限制');
-                            }
-                        }
-                        throw new HttpException(400, '文件上传失败', err.message);
-                    }
-
-                    if (!req.files || req.files.length === 0) {
-                        throw new HttpException(400, '未提供文件');
-                    }
-
-                    // 从请求体中获取其他素材信息
-                    const materialData: CreateMaterialDto = {
-                        category: req.body.category,
-                        description: req.body.description,
-                        is_public: req.body.is_public === 'true',
-                        tags: req.body.tags ? JSON.parse(req.body.tags) : undefined,
-                        metadata: req.body.metadata ? JSON.parse(req.body.metadata) : undefined,
-                        parent_id: req.body.parent_id
-                    };
-
-                    // 上传所有文件并创建素材记录
-                    const uploadPromises = (req.files as Express.Multer.File[]).map(file => 
-                        this.materialService.uploadFile(file, req.user, materialData)
-                    );
-
-                    const materials = await Promise.all(uploadPromises);
-
-                    // 返回创建的素材信息
-                    res.status(201).json({
-                        code: 0,
-                        message: '素材批量上传成功',
-                        data: materials.map(material => this.transformToDto(material))
-                    });
-                } catch (error) {
-                    next(error);
-                }
-            });
-        } catch (error) {
-            next(error);
-        }
-    };
-
-    /**
-     * 创建文本素材
-     * POST /api/v1/materials/text
-     */
-    public createTextMaterial = async (
-        req: Request, 
-        res: Response<ApiResponse<MaterialDto>>,
-        next: NextFunction
-    ): Promise<void> => {
-        try {
-            const materialData: CreateTextMaterialDto = req.body;
-
-            // 创建文本素材
-            const material = await this.materialService.createTextMaterial({
-                content: materialData.content,
-                category: materialData.category,
-                is_public: materialData.is_public,
-                tags: materialData.tags,
-                metadata: materialData.metadata,
-                parent_id: materialData.parent_id
-            }, req.user);
-
-            // 返回创建的素材信息
-            res.status(201).json({
-                code: 0,
-                message: '文本素材创建成功',
-                data: this.transformToDto(material)
             });
         } catch (error) {
             next(error);
@@ -415,32 +341,6 @@ export class MaterialController {
     };
 
     /**
-     * 获取相关素材
-     * GET /api/v1/materials/:id/related
-     */
-    public getRelatedMaterials = async (
-        req: Request, 
-        res: Response<ApiResponse<MaterialDto[]>>,
-        next: NextFunction
-    ): Promise<void> => {
-        try {
-            const id = req.params.id;
-            
-            // 获取相关素材
-            const materials = await this.materialService.getRelatedMaterials(id);
-            
-            // 返回相关素材列表
-            res.status(200).json({
-                code: 0,
-                message: '获取相关素材成功',
-                data: materials.map(material => this.transformToDto(material))
-            });
-        } catch (error) {
-            next(error);
-        }
-    };
-
-    /**
      * 获取素材版本历史
      * GET /api/v1/materials/:id/versions
      */
@@ -460,6 +360,341 @@ export class MaterialController {
                 code: 0,
                 message: '获取素材版本历史成功',
                 data: versions.map(version => this.transformToDto(version))
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 获取素材分类列表
+     * GET /api/v1/materials/admin/categories
+     */
+    public getCategories = async (
+        req: Request,
+        res: Response<ApiResponse<PaginatedResponse<MaterialCategoryDto>>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            // 获取所有分类及数量
+            const categories = await this.materialService.getAllMaterialCategories();
+            
+            // 返回分类列表
+            res.status(200).json({
+                code: 0,
+                message: '获取分类列表成功',
+                data: {
+                    items: categories.map(category => ({
+                        id: category.id,
+                        name: category.name,
+                        description: category.description,
+                        created_at: category.created_at,
+                        updated_at: category.updated_at,
+                        count: (category as any).count || 0
+                    })),
+                    meta: {
+                        total: categories.length,
+                        page: 1,
+                        limit: categories.length,
+                        pages: 1
+                    }
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 创建分类
+     * POST /api/v1/materials/admin/categories
+     */
+    public createCategory = async (
+        req: Request,
+        res: Response<ApiResponse<MaterialCategoryDto>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const { name, description } = req.body as MaterialCategoryDto;
+            
+            if (!name) {
+                throw new HttpException(400, '分类名称不能为空');
+            }
+            
+            // 创建分类
+            const category = await this.materialService.createCategory(name, description);
+            
+            // 返回创建的分类
+            res.status(201).json({
+                code: 0,
+                message: '创建分类成功',
+                data: {
+                    id: category.id,
+                    name: category.name,
+                    description: category.description,
+                    created_at: category.created_at,
+                    updated_at: category.updated_at,
+                    count: 0 // 新创建的分类，素材数量为0
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 更新分类
+     * PUT /api/v1/materials/admin/categories/:id
+     */
+    public updateCategory = async (
+        req: Request,
+        res: Response<ApiResponse<MaterialCategoryDto>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const id = req.params.id;
+            const { name, description } = req.body as MaterialCategoryDto;
+            
+            if (!name) {
+                throw new HttpException(400, '分类名称不能为空');
+            }
+            
+            // 更新分类
+            const category = await this.materialService.updateCategory(id, name, description);
+            
+            // 返回更新后的分类
+            res.status(200).json({
+                code: 0,
+                message: '更新分类成功',
+                data: {
+                    id: category.id,
+                    name: category.name,
+                    description: category.description,
+                    created_at: category.created_at,
+                    updated_at: category.updated_at
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 删除分类
+     * DELETE /api/v1/materials/admin/categories/:id
+     */
+    public deleteCategory = async (
+        req: Request,
+        res: Response<ApiResponse<{ id: string; name: string }>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const id = req.params.id;
+            
+            // 删除分类
+            const deletedCategory = await this.materialService.deleteMaterialCategory(id);
+            
+            // 返回删除的分类信息
+            res.status(200).json({
+                code: 0,
+                message: '删除分类成功',
+                data: { 
+                    id: deletedCategory.id,
+                    name: deletedCategory.name
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 获取素材标签列表
+     * GET /api/v1/materials/admin/tags
+     */
+    public getTags = async (
+        req: Request,
+        res: Response<ApiResponse<PaginatedResponse<MaterialTagDto>>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            // 获取所有标签及数量
+            const tags = await this.materialService.getAllMaterialTags();
+            
+            // 返回标签列表
+            res.status(200).json({
+                code: 0,
+                message: '获取标签列表成功',
+                data: {
+                    items: tags.map(tag => ({
+                        id: tag.id,
+                        name: tag.name,
+                        description: tag.description,
+                        created_at: tag.created_at,
+                        updated_at: tag.updated_at,
+                        count: (tag as any).count || 0
+                    })),
+                    meta: {
+                        total: tags.length,
+                        page: 1,
+                        limit: tags.length,
+                        pages: 1
+                    }
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 根据分类和标签获取素材
+     * GET /api/v1/materials/filter
+     */
+    public getMaterialsByCategoryAndTags = async (
+        req: Request,
+        res: Response<ApiResponse<PaginatedMaterialsResponse>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const query = req.query as any;
+            
+            // 解析查询参数
+            const page = Number(query.page) || 1;
+            const limit = Number(query.limit) || 20;
+            const sort_by = query.sort_by || 'created_at';
+            const sort_order = (query.sort_order as 'ASC' | 'DESC') || 'DESC';
+            const category = query.category as string;
+            const tags = query.tags ? (Array.isArray(query.tags) ? query.tags : [query.tags]) as string[] : undefined;
+            const is_public = query.is_public !== undefined ? query.is_public === 'true' : undefined;
+            
+            // 获取素材列表
+            const { items, total } = await this.materialService.getMaterialsByCategoryAndTags(
+                category,
+                tags,
+                is_public,
+                page,
+                limit,
+                sort_by,
+                sort_order
+            );
+            
+            // 返回素材列表
+            const response: PaginatedMaterialsResponse = {
+                items: items.map(item => this.transformToDto(item)),
+                meta: {
+                    total,
+                    page,
+                    limit,
+                    pages: Math.ceil(total / limit),
+                    sort_by,
+                    sort_order
+                }
+            };
+            
+            res.status(200).json({
+                code: 0,
+                message: '获取素材列表成功',
+                data: response
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 创建新标签
+     * POST /api/v1/materials/admin/tags
+     */
+    public createTag = async (
+        req: Request,
+        res: Response<ApiResponse<MaterialTagDto>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const { name, description } = req.body as MaterialTagDto;
+            
+            if (!name) {
+                throw new HttpException(400, '标签名称不能为空');
+            }
+            
+            // 检查标签是否已存在
+            const existingTags = await this.materialService.getAllMaterialTags();
+            if (existingTags.some(tag => tag.name === name)) {
+                throw new HttpException(409, `标签 "${name}" 已存在`);
+            }
+            
+            // 创建新标签
+            const tag = await this.materialService.createTag(name, description);
+            
+            res.status(201).json({
+                code: 0,
+                message: '创建标签成功',
+                data: tag
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 更新标签
+     * PUT /api/v1/materials/admin/tags/:id
+     */
+    public updateTag = async (
+        req: Request,
+        res: Response<ApiResponse<MaterialTagDto>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const id = req.params.id;
+            const { name, description } = req.body as MaterialTagDto;
+            
+            if (!name) {
+                throw new HttpException(400, '新标签名称不能为空');
+            }
+            
+            // 更新标签
+            const tag = await this.materialService.updateMaterialTag(id, name, description);
+            
+            res.status(200).json({
+                code: 0,
+                message: '更新标签成功',
+                data: {
+                    id: tag.id,
+                    name: tag.name,
+                    description: tag.description,
+                    created_at: tag.created_at,
+                    updated_at: tag.updated_at
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /**
+     * 删除标签
+     * DELETE /api/v1/materials/admin/tags/:id
+     */
+    public deleteTag = async (
+        req: Request,
+        res: Response<ApiResponse<{ id: string; name: string }>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const id = req.params.id;
+            
+            // 删除标签
+            const deletedTag = await this.materialService.deleteMaterialTag(id);
+            
+            res.status(200).json({
+                code: 0,
+                message: '删除标签成功',
+                data: {
+                    id: deletedTag.id,
+                    name: deletedTag.name
+                }
             });
         } catch (error) {
             next(error);

@@ -378,37 +378,6 @@
  *         404:
  *           $ref: '#/components/responses/NotFoundError'
  *
- *   /materials/{id}/related:
- *     get:
- *       tags:
- *         - 素材管理
- *       summary: 获取相关素材
- *       description: 获取与指定素材相关的素材列表
- *       parameters:
- *         - name: id
- *           in: path
- *           required: true
- *           description: 素材ID
- *           schema:
- *             type: string
- *             format: uuid
- *       responses:
- *         200:
- *           description: 成功获取相关素材
- *           content:
- *             application/json:
- *               schema:
- *                 allOf:
- *                   - $ref: '#/components/schemas/ApiResponse'
- *                   - type: object
- *                     properties:
- *                       data:
- *                         type: array
- *                         items:
- *                           $ref: '#/components/schemas/Material'
- *         404:
- *           $ref: '#/components/responses/NotFoundError'
- *
  *   /materials/{id}/versions:
  *     get:
  *       tags:
@@ -711,6 +680,332 @@
  *                               type: string
  *                               format: uuid
  *                             description: 成功删除的素材ID列表
+ *         400:
+ *           $ref: '#/components/responses/ValidationError'
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         403:
+ *           $ref: '#/components/responses/ForbiddenError'
+ *
+ *   /materials/filter:
+ *     get:
+ *       tags:
+ *         - 素材管理
+ *       summary: 根据分类和标签筛选素材
+ *       description: 根据分类和标签条件获取素材列表
+ *       parameters:
+ *         - in: query
+ *           name: page
+ *           schema:
+ *             type: integer
+ *             default: 1
+ *           description: 页码
+ *         - in: query
+ *           name: limit
+ *           schema:
+ *             type: integer
+ *             default: 20
+ *           description: 每页数量
+ *         - in: query
+ *           name: sort_by
+ *           schema:
+ *             type: string
+ *             default: created_at
+ *           description: 排序字段
+ *         - in: query
+ *           name: sort_order
+ *           schema:
+ *             type: string
+ *             enum: [ASC, DESC]
+ *             default: DESC
+ *           description: 排序方向
+ *         - in: query
+ *           name: category
+ *           schema:
+ *             type: string
+ *           description: 分类名称
+ *         - in: query
+ *           name: tags
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: string
+ *           description: 标签数组
+ *         - in: query
+ *           name: is_public
+ *           schema:
+ *             type: boolean
+ *           description: 是否公开
+ *       responses:
+ *         200:
+ *           description: 成功获取素材列表
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         allOf:
+ *                           - $ref: '#/components/schemas/PaginatedResponse'
+ *                           - type: object
+ *                             properties:
+ *                               items:
+ *                                 type: array
+ *                                 items:
+ *                                   $ref: '#/components/schemas/Material'
+ *
+ *   /materials/admin/categories:
+ *     get:
+ *       tags:
+ *         - 素材管理-分类
+ *       summary: 获取所有分类
+ *       description: 获取所有素材分类及其使用数量
+ *       security:
+ *         - BearerAuth: []
+ *       responses:
+ *         200:
+ *           description: 成功获取分类列表
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             name:
+ *                               type: string
+ *                               description: 分类名称
+ *                             description:
+ *                               type: string
+ *                               description: 分类描述
+ *                             count:
+ *                               type: integer
+ *                               description: 该分类下的素材数量
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         403:
+ *           $ref: '#/components/responses/ForbiddenError'
+ *     post:
+ *       tags:
+ *         - 素材管理-分类
+ *       summary: 创建或更新分类
+ *       description: 创建新分类或更新现有分类
+ *       security:
+ *         - BearerAuth: []
+ *       parameters:
+ *         - in: query
+ *           name: old_name
+ *           schema:
+ *             type: string
+ *           description: 旧分类名称（更新时使用）
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   description: 分类名称
+ *                 description:
+ *                   type: string
+ *                   description: 分类描述
+ *               required:
+ *                 - name
+ *       responses:
+ *         200:
+ *           description: 成功创建或更新分类
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: object
+ *                         properties:
+ *                           updated_count:
+ *                             type: integer
+ *                             description: 更新的素材数量
+ *         400:
+ *           $ref: '#/components/responses/ValidationError'
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         403:
+ *           $ref: '#/components/responses/ForbiddenError'
+ *
+ *   /materials/admin/categories/{name}:
+ *     delete:
+ *       tags:
+ *         - 素材管理-分类
+ *       summary: 删除分类
+ *       description: 删除指定分类（不会删除素材，仅清空素材的分类字段）
+ *       security:
+ *         - BearerAuth: []
+ *       parameters:
+ *         - name: name
+ *           in: path
+ *           required: true
+ *           description: 分类名称
+ *           schema:
+ *             type: string
+ *       responses:
+ *         200:
+ *           description: 成功删除分类
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: object
+ *                         properties:
+ *                           updated_count:
+ *                             type: integer
+ *                             description: 更新的素材数量
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         403:
+ *           $ref: '#/components/responses/ForbiddenError'
+ *
+ *   /materials/admin/tags:
+ *     get:
+ *       tags:
+ *         - 素材管理-标签
+ *       summary: 获取所有标签
+ *       description: 获取所有素材标签及其使用数量
+ *       security:
+ *         - BearerAuth: []
+ *       responses:
+ *         200:
+ *           description: 成功获取标签列表
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             name:
+ *                               type: string
+ *                               description: 标签名称
+ *                             count:
+ *                               type: integer
+ *                               description: 使用该标签的素材数量
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         403:
+ *           $ref: '#/components/responses/ForbiddenError'
+ *
+ *   /materials/admin/tags/add:
+ *     post:
+ *       tags:
+ *         - 素材管理-标签
+ *       summary: 添加标签到素材
+ *       description: 向指定素材添加标签
+ *       security:
+ *         - BearerAuth: []
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   description: 标签名称
+ *                 material_ids:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     format: uuid
+ *                   description: 素材ID数组
+ *               required:
+ *                 - name
+ *                 - material_ids
+ *       responses:
+ *         200:
+ *           description: 成功添加标签
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: object
+ *                         properties:
+ *                           updated_count:
+ *                             type: integer
+ *                             description: 更新的素材数量
+ *         400:
+ *           $ref: '#/components/responses/ValidationError'
+ *         401:
+ *           $ref: '#/components/responses/UnauthorizedError'
+ *         403:
+ *           $ref: '#/components/responses/ForbiddenError'
+ *
+ *   /materials/admin/tags/remove:
+ *     post:
+ *       tags:
+ *         - 素材管理-标签
+ *       summary: 从素材中移除标签
+ *       description: 从指定素材中移除标签
+ *       security:
+ *         - BearerAuth: []
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   description: 标签名称
+ *                 material_ids:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     format: uuid
+ *                   description: 素材ID数组
+ *               required:
+ *                 - name
+ *                 - material_ids
+ *       responses:
+ *         200:
+ *           description: 成功移除标签
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/ApiResponse'
+ *                   - type: object
+ *                     properties:
+ *                       data:
+ *                         type: object
+ *                         properties:
+ *                           updated_count:
+ *                             type: integer
+ *                             description: 更新的素材数量
  *         400:
  *           $ref: '#/components/responses/ValidationError'
  *         401:

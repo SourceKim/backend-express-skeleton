@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ProductService } from '@/services/product.service';
 import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDto, ProductQueryDto } from '@/dtos/product.dto';
-import { PaginationQueryDto } from '@/dtos/common.dto';
+import { PaginationQueryDto, ApiResponse } from '@/dtos/common.dto';
 import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 import { HttpException } from '@/exceptions/http.exception';
@@ -37,7 +37,7 @@ export class ProductController {
    */
   updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = Number(req.params.id);
+      const id = req.params.id;
       const updateProductDto = plainToClass(UpdateProductDto, req.body);
       const errors = await validate(updateProductDto);
 
@@ -61,7 +61,7 @@ export class ProductController {
    */
   deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = Number(req.params.id);
+      const id = req.params.id;
       await this.productService.deleteProduct(id);
       res.status(200).json({
         code: 0,
@@ -77,10 +77,11 @@ export class ProductController {
    */
   getProductById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = Number(req.params.id);
+      const id = req.params.id;
       const product = await this.productService.getProductById(id);
       res.status(200).json({
         code: 0,
+        message: '获取商品详情成功',
         data: product
       });
     } catch (error) {
@@ -103,6 +104,7 @@ export class ProductController {
       const products = await this.productService.getProducts(queryDto);
       res.status(200).json({
         code: 0,
+        message: '获取商品列表成功',
         data: products
       });
     } catch (error) {
@@ -138,7 +140,7 @@ export class ProductController {
    */
   updateCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = Number(req.params.id);
+      const id = req.params.id;
       const updateCategoryDto = plainToClass(UpdateCategoryDto, req.body);
       const errors = await validate(updateCategoryDto);
 
@@ -162,7 +164,7 @@ export class ProductController {
    */
   deleteCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id = Number(req.params.id);
+      const id = req.params.id;
       await this.productService.deleteCategory(id);
       res.status(200).json({
         code: 0,
@@ -178,9 +180,20 @@ export class ProductController {
    */
   getAllCategories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const categories = await this.productService.getAllCategories();
+      // 从查询参数中获取分页参数
+      const query = PaginationQueryDto.fromRequest(req.query);
+      
+      // 调用服务获取分页数据
+      const categories = await this.productService.getAllCategories(
+        query.page,
+        query.limit,
+        query.sort_by,
+        query.sort_order
+      );
+      
       res.status(200).json({
         code: 0,
+        message: '获取分类列表成功',
         data: categories
       });
     } catch (error) {

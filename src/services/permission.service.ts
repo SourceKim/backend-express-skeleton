@@ -7,6 +7,7 @@ import {
     PermissionResponseDto
 } from '@/dtos/permission.dto';
 import { HttpException } from '@/exceptions/http.exception';
+import { PaginatedResponse } from '@/dtos/common.dto';
 
 export class PermissionService {
     private permissionRepository: Repository<Permission>;
@@ -15,17 +16,39 @@ export class PermissionService {
         this.permissionRepository = AppDataSource.getRepository(Permission);
     }
 
-    async findAllPermissions(): Promise<PermissionResponseDto[]> {
-        const permissions = await this.permissionRepository.find();
-        return permissions.map(permission => ({
-            id: permission.id,
-            name: permission.name,
-            resource: permission.resource,
-            action: permission.action,
-            description: permission.description,
-            created_at: permission.created_at,
-            updated_at: permission.updated_at
-        }));
+    async findAllPermissions(page: number = 1, limit: number = 20, sort_by: string = 'created_at', sort_order: 'ASC' | 'DESC' = 'DESC'): Promise<PaginatedResponse<PermissionResponseDto>> {
+        try {
+            const [permissions, total] = await this.permissionRepository.findAndCount({
+                order: { [sort_by]: sort_order },
+                skip: (page - 1) * limit,
+                take: limit
+            });
+            
+            const pages = Math.ceil(total / limit);
+            
+            return {
+                items: permissions.map(permission => ({
+                    id: permission.id,
+                    name: permission.name,
+                    resource: permission.resource,
+                    action: permission.action,
+                    description: permission.description,
+                    created_at: permission.created_at,
+                    updated_at: permission.updated_at
+                })),
+                meta: {
+                    total,
+                    page,
+                    limit,
+                    pages,
+                    sort_by,
+                    sort_order
+                }
+            };
+        } catch (error) {
+            console.error('获取所有权限失败:', error);
+            throw new HttpException(500, '获取所有权限失败');
+        }
     }
 
     async findPermissionById(id: string): Promise<PermissionResponseDto | null> {

@@ -6,10 +6,10 @@ import { User } from '@/models/user.model';
 import { UserSettings } from '@/models/user-settings.model';
 import { Permission } from '@/models/permission.model';
 import { Role } from '@/models/role.model';
-import { Category, Product } from '@/models/product.model';
+import { Product, ProductCategory } from '@/models/product.model';
 import { Order, OrderItem } from '@/models/order.model';
 import { Cart, CartItem } from '@/models/cart.model';
-import { Material } from '@/models/material.model';
+import { Material, MaterialCategory, MaterialTag } from '@/models/material.model';
 
 export const AppDataSource = new DataSource({
     type: 'mysql',
@@ -20,18 +20,23 @@ export const AppDataSource = new DataSource({
     database: ENV.MYSQL_DATABASE,
     synchronize: false, // 禁用自动同步以避免数据结构冲突
     logging: true, // 开启数据库查询日志
+    extra: {
+        decimalNumbers: true
+    },
     entities: [
         User, 
         UserSettings, 
         Permission,
         Role,
         Product,
-        Category,
+        ProductCategory,
         Order,
         OrderItem,
         Cart,
         CartItem,
-        Material
+        Material,
+        MaterialCategory,
+        MaterialTag
     ],
     migrations: ['migrations/*.ts'],
     subscribers: [],

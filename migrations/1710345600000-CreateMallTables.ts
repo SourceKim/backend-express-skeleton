@@ -9,10 +9,9 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment'
+            type: 'varchar',
+            length: '36',
+            isPrimary: true
           },
           {
             name: 'name',
@@ -35,6 +34,11 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',
             onUpdate: 'CURRENT_TIMESTAMP'
+          },
+          {
+            name: 'deleted_at',
+            type: 'timestamp',
+            isNullable: true
           }
         ]
       }),
@@ -48,10 +52,9 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment'
+            type: 'varchar',
+            length: '36',
+            isPrimary: true
           },
           {
             name: 'name',
@@ -85,7 +88,8 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
           },
           {
             name: 'category_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isNullable: true
           },
           {
@@ -98,6 +102,11 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',
             onUpdate: 'CURRENT_TIMESTAMP'
+          },
+          {
+            name: 'deleted_at',
+            type: 'timestamp',
+            isNullable: true
           }
         ]
       }),
@@ -122,7 +131,8 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
         columns: [
           {
             name: 'product_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isPrimary: true
           },
           {
@@ -164,10 +174,9 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment'
+            type: 'varchar',
+            length: '36',
+            isPrimary: true
           },
           {
             name: 'order_number',
@@ -211,6 +220,11 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',
             onUpdate: 'CURRENT_TIMESTAMP'
+          },
+          {
+            name: 'deleted_at',
+            type: 'timestamp',
+            isNullable: true
           }
         ]
       }),
@@ -235,19 +249,20 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment'
+            type: 'varchar',
+            length: '36',
+            isPrimary: true
           },
           {
             name: 'order_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isNullable: false
           },
           {
             name: 'product_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isNullable: false
           },
           {
@@ -272,6 +287,11 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',
             onUpdate: 'CURRENT_TIMESTAMP'
+          },
+          {
+            name: 'deleted_at',
+            type: 'timestamp',
+            isNullable: true
           }
         ]
       }),
@@ -295,7 +315,7 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
         columnNames: ['product_id'],
         referencedColumnNames: ['id'],
         referencedTableName: 'mall_product',
-        onDelete: 'RESTRICT'
+        onDelete: 'CASCADE'
       })
     );
 
@@ -306,10 +326,9 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment'
+            type: 'varchar',
+            length: '36',
+            isPrimary: true
           },
           {
             name: 'user_id',
@@ -335,6 +354,11 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',
             onUpdate: 'CURRENT_TIMESTAMP'
+          },
+          {
+            name: 'deleted_at',
+            type: 'timestamp',
+            isNullable: true
           }
         ]
       }),
@@ -359,19 +383,20 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment'
+            type: 'varchar',
+            length: '36',
+            isPrimary: true
           },
           {
             name: 'cart_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isNullable: false
           },
           {
             name: 'product_id',
-            type: 'int',
+            type: 'varchar',
+            length: '36',
             isNullable: false
           },
           {
@@ -389,6 +414,11 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
             type: 'timestamp',
             default: 'CURRENT_TIMESTAMP',
             onUpdate: 'CURRENT_TIMESTAMP'
+          },
+          {
+            name: 'deleted_at',
+            type: 'timestamp',
+            isNullable: true
           }
         ]
       }),
@@ -401,7 +431,7 @@ export class CreateMallTables1710345600000 implements MigrationInterface {
       new TableForeignKey({
         columnNames: ['cart_id'],
         referencedColumnNames: ['id'],
-        referencedTableName: 'mall_cart',
+        referencedTableName : 'mall_cart',
         onDelete: 'CASCADE'
       })
     );

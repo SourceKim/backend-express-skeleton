@@ -1,12 +1,13 @@
 import { Entity, Column, ManyToOne, OneToMany, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
 import { BaseEntity } from './base.model';
 import { Material } from './material.model';
+import { customAlphabet } from 'nanoid';
 
 /**
  * 商品分类实体
  */
 @Entity('mall_product_category')
-export class Category extends BaseEntity {
+export class ProductCategory extends BaseEntity {
   @Column({ length: 50, nullable: false })
   name!: string;
 
@@ -50,12 +51,12 @@ export class Product extends BaseEntity {
   })
   status!: ProductStatus;
 
-  @ManyToOne(() => Category, category => category.products, { nullable: true })
+  @ManyToOne(() => ProductCategory, category => category.products, { nullable: true })
   @JoinColumn({ name: 'category_id' })
-  category!: Category;
+  category!: ProductCategory;
 
-  @Column({ nullable: true })
-  category_id!: number;
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  category_id!: string;
 
   @ManyToMany(() => Material)
   @JoinTable({

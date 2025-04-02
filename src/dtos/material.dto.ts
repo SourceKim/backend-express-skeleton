@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsBoolean, IsNumber, IsArray, IsUUID, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsBoolean, IsNumber, IsArray, IsUUID, IsObject, MaxLength } from 'class-validator';
 import { PaginationQueryDto, PaginatedResponse, ApiResponse } from '@/dtos/common.dto';
 import { MaterialType } from '@/models/material.model';
 
@@ -13,6 +13,10 @@ export class CreateMaterialDto {
 
     @IsString()
     @IsOptional()
+    materialCategoryId?: string;
+
+    @IsString()
+    @IsOptional()
     description?: string;
 
     @IsBoolean()
@@ -24,35 +28,10 @@ export class CreateMaterialDto {
     @IsOptional()
     tags?: string[];
 
-    @IsObject()
-    @IsOptional()
-    metadata?: Record<string, any>;
-
-    @IsString()
-    @IsOptional()
-    parent_id?: string;
-}
-
-/**
- * 创建文本素材DTO
- * 用于创建文本类型素材时的数据验证
- */
-export class CreateTextMaterialDto {
-    @IsString()
-    content!: string;
-
-    @IsString()
-    @IsOptional()
-    category?: string;
-
-    @IsBoolean()
-    @IsOptional()
-    is_public?: boolean;
-
     @IsArray()
     @IsString({ each: true })
     @IsOptional()
-    tags?: string[];
+    materialTagIds?: string[];
 
     @IsObject()
     @IsOptional()
@@ -150,6 +129,7 @@ export interface MaterialDto {
     size?: number;
     type: MaterialType;
     category?: string;
+    materialCategory?: MaterialCategoryDto;
     description?: string;
     is_public: boolean;
     upload_dir?: string;
@@ -158,6 +138,7 @@ export interface MaterialDto {
         username: string;
     };
     tags?: string[];
+    materialTags?: MaterialTagDto[];
     metadata?: Record<string, any>;
     parent_id?: string;
     url?: string;
@@ -177,8 +158,136 @@ export type PaginatedMaterialsResponse = PaginatedResponse<MaterialDto>;
  */
 export class BatchDeleteMaterialsDto {
     @IsArray()
-    @IsUUID(undefined, { each: true })
+    @IsString({ each: true })
     ids!: string[];
 }
+
+/**
+ * 分类管理DTO
+ * 用于创建和更新分类
+ * @deprecated 使用MaterialCategoryDto替代
+ */
+export class CategoryDto {
+    @IsString()
+    @MaxLength(50, { message: '分类名称不能超过50个字符' })
+    name!: string;
+    
+    @IsString()
+    @IsOptional()
+    @MaxLength(200, { message: '分类描述不能超过200个字符' })
+    description?: string;
+}
+
+/**
+ * 标签管理DTO
+ * 用于创建和更新标签
+ * @deprecated 使用MaterialTagDto替代
+ */
+export class TagDto {
+    @IsString()
+    @MaxLength(50, { message: '标签名称不能超过50个字符' })
+    name!: string;
+}
+
+/**
+ * 素材分类管理DTO
+ * 用于创建和更新素材分类
+ */
+export class MaterialCategoryDto {
+    @IsString()
+    @MaxLength(50, { message: '分类名称不能超过50个字符' })
+    name!: string;
+    
+    @IsString()
+    @IsOptional()
+    @MaxLength(200, { message: '分类描述不能超过200个字符' })
+    description?: string;
+
+    // 以下字段用于响应
+    id?: string;
+    created_at?: Date;
+    updated_at?: Date;
+    // 材料数量，用于统计
+    count?: number;
+}
+
+/**
+ * 素材标签管理DTO
+ * 用于创建和更新素材标签
+ */
+export class MaterialTagDto {
+    @IsString()
+    @MaxLength(50, { message: '标签名称不能超过50个字符' })
+    name!: string;
+    
+    @IsString()
+    @IsOptional()
+    @MaxLength(200, { message: '标签描述不能超过200个字符' })
+    description?: string;
+
+    // 以下字段用于响应
+    id?: string;
+    created_at?: Date;
+    updated_at?: Date;
+    // 材料数量，用于统计
+    count?: number;
+}
+
+/**
+ * 按分类和标签查询素材DTO
+ * 用于根据分类和标签查询素材
+ */
+export class MaterialsByCategoryAndTagsDto extends PaginationQueryDto {
+    @IsString()
+    @IsOptional()
+    category?: string;
+    
+    @IsString()
+    @IsOptional()
+    materialCategoryId?: string;
+    
+    @IsArray()
+    @IsString({ each: true })
+    @IsOptional()
+    tags?: string[];
+    
+    @IsArray()
+    @IsString({ each: true })
+    @IsOptional()
+    materialTagIds?: string[];
+    
+    @IsBoolean()
+    @IsOptional()
+    is_public?: boolean;
+}
+
+/**
+ * 分类列表响应DTO
+ * @deprecated 使用MaterialCategoriesResponse替代
+ */
+export type CategoriesResponse = {
+    name: string;
+    description?: string;
+    count: number;
+}[];
+
+/**
+ * 标签列表响应DTO
+ * @deprecated 使用MaterialTagsResponse替代
+ */
+export type TagsResponse = {
+    name: string;
+    count: number;
+}[];
+
+/**
+ * 素材分类列表响应DTO
+ */
+export type MaterialCategoriesResponse = MaterialCategoryDto[];
+
+/**
+ * 素材标签列表响应DTO
+ */
+export type MaterialTagsResponse = MaterialTagDto[];
 
 export { ApiResponse }; 

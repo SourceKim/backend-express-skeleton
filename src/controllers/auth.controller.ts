@@ -164,4 +164,41 @@ export class AuthController {
             next(error);
         }
     };
+
+    /**
+     * 通过令牌登录
+     * POST /api/auth/token-login
+     */
+    tokenLogin = async (
+        req: Request<{}, ApiResponse<LoginResponseDto>, {}>,
+        res: Response<ApiResponse<LoginResponseDto>>,
+        next: NextFunction
+    ): Promise<void> => {
+        try {
+            const authHeader = req.headers.authorization;
+            logInfo('用户令牌登录请求', (req as any).requestId);
+
+            if (!authHeader) {
+                logError('令牌登录失败 - 未提供认证令牌', (req as any).requestId);
+                throw new HttpException(401, '未提供认证令牌');
+            }
+
+            const token = authHeader.split(' ')[1];
+            const result = await this.authService.loginWithToken(token);
+            
+            logInfo('用户令牌登录成功', (req as any).requestId, { userId: result.user.id, username: result.user.username });
+            
+            res.json({
+                code: 0,
+                message: '登录成功',
+                data: {
+                    access_token: result.access_token,
+                    user: this.transformUserToDto(result.user)
+                }
+            });
+        } catch (error) {
+            logError('用户令牌登录失败', (req as any).requestId, { error });
+            next(error);
+        }
+    };
 } 

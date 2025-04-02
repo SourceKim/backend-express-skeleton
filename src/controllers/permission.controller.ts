@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { PermissionService } from '@/services/permission.service';
-import { ApiResponse } from '@/dtos/common.dto';
+import { ApiResponse, PaginatedResponse, PaginationQueryDto } from '@/dtos/common.dto';
 import { 
     CreatePermissionDto,
     UpdatePermissionDto,
@@ -25,15 +25,26 @@ export class PermissionController {
      */
     public findAllPermissions = async (
         req: Request, 
-        res: Response<ApiResponse<PermissionResponseDto[]>>,
+        res: Response<ApiResponse<PaginatedResponse<PermissionResponseDto>>>,
         next: NextFunction
     ): Promise<void> => {
         try {
-            const permissions = await this.permissionService.findAllPermissions();
+            // 从查询参数中获取分页参数
+            const query = PaginationQueryDto.fromRequest(req.query);
+            
+            // 调用服务获取分页数据
+            const paginatedPermissions = await this.permissionService.findAllPermissions(
+                query.page,
+                query.limit,
+                query.sort_by,
+                query.sort_order
+            );
+            
+            // 返回分页数据
             res.json({
                 code: 0,
-                message: 'success',
-                data: permissions
+                message: '获取权限列表成功',
+                data: paginatedPermissions
             });
         } catch (error) {
             next(error);
