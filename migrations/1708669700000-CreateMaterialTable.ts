@@ -153,42 +153,6 @@ export class CreateMaterialTable1708669700000 implements MigrationInterface {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         `);
 
-        // 创建材料-标签关联表
-        await queryRunner.createTable(
-            new Table({
-                name: 'material_to_tags',
-                columns: [
-                    {
-                        name: 'material_id',
-                        type: 'varchar',
-                        length: '36',
-                        isPrimary: true
-                    },
-                    {
-                        name: 'tag_id',
-                        type: 'varchar',
-                        length: '36',
-                        isPrimary: true
-                    }
-                ],
-                foreignKeys: [
-                    {
-                        columnNames: ['material_id'],
-                        referencedColumnNames: ['id'],
-                        referencedTableName: 'materials',
-                        onDelete: 'CASCADE'
-                    },
-                    {
-                        columnNames: ['tag_id'],
-                        referencedColumnNames: ['id'],
-                        referencedTableName: 'material_tags',
-                        onDelete: 'CASCADE'
-                    }
-                ]
-            }),
-            true
-        );
-
         // 添加外键约束
         await queryRunner.createForeignKey(
             'materials',
@@ -200,18 +164,6 @@ export class CreateMaterialTable1708669700000 implements MigrationInterface {
             })
         );
 
-        // 添加自引用外键约束
-        await queryRunner.createForeignKey(
-            'materials',
-            new TableForeignKey({
-                columnNames: ['parent_id'],
-                referencedColumnNames: ['id'],
-                referencedTableName: 'materials',
-                onDelete: 'SET NULL'
-            })
-        );
-
-        // 添加素材分类外键约束
         await queryRunner.createForeignKey(
             'materials',
             new TableForeignKey({
@@ -222,25 +174,7 @@ export class CreateMaterialTable1708669700000 implements MigrationInterface {
             })
         );
 
-        // 添加分类索引
-        await queryRunner.createIndex(
-            'materials',
-            new TableIndex({
-                name: 'IDX_MATERIALS_CATEGORY',
-                columnNames: ['category']
-            })
-        );
-
-        // 添加素材分类ID索引
-        await queryRunner.createIndex(
-            'materials',
-            new TableIndex({
-                name: 'IDX_MATERIALS_MATERIAL_CATEGORY_ID',
-                columnNames: ['material_category_id']
-            })
-        );
-
-        // 添加类型索引
+        // 创建索引
         await queryRunner.createIndex(
             'materials',
             new TableIndex({
@@ -249,58 +183,41 @@ export class CreateMaterialTable1708669700000 implements MigrationInterface {
             })
         );
 
-        // 添加公开状态索引
         await queryRunner.createIndex(
             'materials',
             new TableIndex({
-                name: 'IDX_MATERIALS_PUBLIC',
+                name: 'IDX_MATERIALS_CATEGORY',
+                columnNames: ['category']
+            })
+        );
+
+        await queryRunner.createIndex(
+            'materials',
+            new TableIndex({
+                name: 'IDX_MATERIALS_IS_PUBLIC',
                 columnNames: ['is_public']
-            })
-        );
-
-        // 添加父素材索引
-        await queryRunner.createIndex(
-            'materials',
-            new TableIndex({
-                name: 'IDX_MATERIALS_PARENT_ID',
-                columnNames: ['parent_id']
-            })
-        );
-
-        // 添加复合索引
-        await queryRunner.createIndex(
-            'materials',
-            new TableIndex({
-                name: 'IDX_MATERIALS_CATEGORY_TYPE',
-                columnNames: ['category', 'type']
             })
         );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        // 删除材料-标签关联表
-        await queryRunner.dropTable('material_to_tags', true);
-        
-        // 删除标签表
-        await queryRunner.query(`DROP TABLE IF EXISTS \`material_tags\``);
-        
-        // 删除分类表
-        await queryRunner.query(`DROP TABLE IF EXISTS \`material_categories\``);
-        
-        // 删除材料表及其外键和索引
-        const table = await queryRunner.getTable('materials');
-        if (table) {
-            const foreignKeys = table.foreignKeys;
+        // 删除外键约束
+        const materialTable = await queryRunner.getTable('materials');
+        if (materialTable) {
+            const foreignKeys = materialTable.foreignKeys;
             for (const foreignKey of foreignKeys) {
                 await queryRunner.dropForeignKey('materials', foreignKey);
             }
-            
-            const indices = table.indices;
-            for (const index of indices) {
-                await queryRunner.dropIndex('materials', index);
-            }
         }
-        
-        await queryRunner.dropTable('materials');
+
+        // 删除索引
+        await queryRunner.dropIndex('materials', 'IDX_MATERIALS_TYPE');
+        await queryRunner.dropIndex('materials', 'IDX_MATERIALS_CATEGORY');
+        await queryRunner.dropIndex('materials', 'IDX_MATERIALS_IS_PUBLIC');
+
+        // 删除表
+        await queryRunner.dropTable('materials', true);
+        await queryRunner.dropTable('material_categories', true);
+        await queryRunner.dropTable('material_tags', true);
     }
 } 

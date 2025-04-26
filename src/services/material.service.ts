@@ -225,29 +225,101 @@ export class MaterialService {
             
             // 计算相对路径
             const relativePath = path.join(subDir, filename).replace(/\\/g, '/');
-            const url = `${this.baseUrl}/uploads/${relativePath}`;
             
-            // 创建素材记录
-            const material = new Material();
-            material.id = this.generateId();
-            material.filename = filename;
-            material.originalname = file.originalname;
-            material.path = relativePath;
-            material.mimetype = file.mimetype;
-            material.size = file.size;
-            material.type = type;
-            material.category = options?.category;
-            material.description = options?.description;
-            material.is_public = options?.is_public || false;
-            material.upload_dir = subDir;
-            material.user = user;
-            material.tags = options?.tags;
-            material.metadata = options?.metadata;
-            material.parent_id = options?.parent_id;
-            
-            // 保存素材记录并返回完整的保存后的数据（包含ID等自动生成的字段）
-            const savedMaterial = await this.materialRepository.save(material);
-            return savedMaterial;
+            // 开始数据库事务
+            const queryRunner = this.dataSource.createQueryRunner();
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+
+            try {
+                // 创建素材记录
+                const material = new Material();
+                material.id = this.generateId();
+                material.filename = filename;
+                material.originalname = file.originalname;
+                material.path = relativePath;
+                material.mimetype = file.mimetype;
+                material.size = file.size;
+                material.type = type;
+                material.description = options?.description;
+                material.is_public = options?.is_public || false;
+                material.upload_dir = subDir;
+                material.user = user;
+                material.metadata = options?.metadata;
+                material.parent_id = options?.parent_id;
+
+                // 处理分类关联
+                if (options?.category) {
+                    const categoryRepository = queryRunner.manager.getRepository(MaterialCategory);
+                    let category = await categoryRepository.findOne({
+                        where: { name: options.category }
+                    });
+
+                    if (!category) {
+                        // 如果分类不存在，创建新分类
+                        category = new MaterialCategory();
+                        category.id = this.generateId();
+                        category.name = options.category;
+                        category = await queryRunner.manager.save(category);
+                    }
+
+                    material.materialCategory = category;
+                    material.materialCategoryId = category.id;
+                    // 为了兼容旧代码，同时设置category字段
+                    material.category = category.id;
+                }
+
+                // 保存素材基本信息
+                const savedMaterial = await queryRunner.manager.save(material);
+
+                // 处理标签关联
+                if (options?.tags && options.tags.length > 0) {
+                    const tagRepository = queryRunner.manager.getRepository(MaterialTag);
+                    const materialTags: MaterialTag[] = [];
+
+                    for (const tagName of options.tags) {
+                        let tag = await tagRepository.findOne({
+                            where: { name: tagName }
+                        });
+
+                        if (!tag) {
+                            // 如果标签不存在，创建新标签
+                            tag = new MaterialTag();
+                            tag.id = this.generateId();
+                            tag.name = tagName;
+                            tag = await queryRunner.manager.save(tag);
+                        }
+
+                        materialTags.push(tag);
+                    }
+
+                    // 设置素材的标签关联
+                    savedMaterial.materialTags = materialTags;
+                    await queryRunner.manager.save(savedMaterial);
+                }
+
+                // 提交事务
+                await queryRunner.commitTransaction();
+
+                // 重新查询完整的素材信息（包含关联）
+                const finalMaterial = await this.materialRepository.findOne({
+                    where: { id: savedMaterial.id },
+                    relations: ['materialCategory', 'materialTags']
+                });
+
+                if (!finalMaterial) {
+                    throw new HttpException(500, '获取保存的素材失败');
+                }
+
+                return finalMaterial;
+            } catch (error) {
+                // 如果出错，回滚事务
+                await queryRunner.rollbackTransaction();
+                throw error;
+            } finally {
+                // 释放查询运行器
+                await queryRunner.release();
+            }
         } catch (error) {
             console.error('上传文件失败:', error);
             throw error instanceof HttpException ? error : new HttpException(500, '上传文件失败');
@@ -261,7 +333,7 @@ export class MaterialService {
      * @param filter 过滤条件
      * @param sortBy 排序字段
      * @param sortOrder 排序方向
-     * @returns 素材列表和总数
+     * @returns 分页后的素材列表
      */
     public async getMaterials(
         page = 1,
@@ -271,18 +343,14 @@ export class MaterialService {
         sortOrder: 'ASC' | 'DESC' = 'DESC'
     ) {
         try {
-            const queryBuilder = this.materialRepository.createQueryBuilder('material');
-            
-            // 构建查询条件
+            const queryBuilder = this.materialRepository
+                .createQueryBuilder('material')
+                .leftJoinAndSelect('material.materialCategory', 'materialCategory')
+                .leftJoinAndSelect('material.user', 'user')
+                .leftJoinAndSelect('material.materialTags', 'materialTags');
+
+            // 应用过滤条件
             if (filter) {
-                if (filter.id) {
-                    if (Array.isArray(filter.id)) {
-                        queryBuilder.andWhere('material.id IN (:...ids)', { ids: filter.id });
-                    } else {
-                        queryBuilder.andWhere('material.id = :id', { id: filter.id });
-                    }
-                }
-                
                 if (filter.type) {
                     if (Array.isArray(filter.type)) {
                         queryBuilder.andWhere('material.type IN (:...types)', { types: filter.type });
@@ -290,85 +358,96 @@ export class MaterialService {
                         queryBuilder.andWhere('material.type = :type', { type: filter.type });
                     }
                 }
-                
+
                 if (filter.category) {
                     if (Array.isArray(filter.category)) {
-                        queryBuilder.andWhere('material.category IN (:...categories)', { categories: filter.category });
+                        queryBuilder.andWhere('materialCategory.name IN (:...categories)', { categories: filter.category });
                     } else {
-                        queryBuilder.andWhere('material.category = :category', { category: filter.category });
+                        queryBuilder.andWhere('materialCategory.name = :category', { category: filter.category });
                     }
                 }
-                
+
                 if (filter.tags) {
-                    // 注意：这里使用JSON包含查询，具体实现可能因数据库而异
                     if (Array.isArray(filter.tags)) {
-                        // 查找包含任一标签的素材
+                        // 使用 JSON_CONTAINS 函数检查 tags 字段是否包含指定的标签
                         const tagConditions = filter.tags.map((tag, index) => {
                             const paramName = `tag${index}`;
                             queryBuilder.setParameter(paramName, tag);
-                            return `JSON_CONTAINS(material.tags, '"${tag}"')`;
-                        }).join(' OR ');
-                        
-                        queryBuilder.andWhere(`(${tagConditions})`);
+                            return `JSON_CONTAINS(material.tags, :${paramName})`;
+                        });
+                        queryBuilder.andWhere(`(${tagConditions.join(' OR ')})`);
                     } else {
-                        queryBuilder.andWhere(`JSON_CONTAINS(material.tags, :tag)`, { tag: `"${filter.tags}"` });
+                        queryBuilder.andWhere('JSON_CONTAINS(material.tags, :tag)', { tag: filter.tags });
                     }
                 }
-                
+
                 if (filter.keyword) {
                     queryBuilder.andWhere(
-                        '(material.filename LIKE :keyword OR material.originalname LIKE :keyword OR material.description LIKE :keyword)',
+                        '(material.originalname LIKE :keyword OR material.description LIKE :keyword)',
                         { keyword: `%${filter.keyword}%` }
                     );
                 }
-                
+
                 if (filter.is_public !== undefined) {
-                    queryBuilder.andWhere('material.is_public = :is_public', { is_public: filter.is_public });
+                    queryBuilder.andWhere('material.is_public = :isPublic', { isPublic: filter.is_public });
                 }
-                
+
                 if (filter.parent_id) {
                     queryBuilder.andWhere('material.parent_id = :parentId', { parentId: filter.parent_id });
                 }
-                
-                if (filter.created_after) {
-                    queryBuilder.andWhere('material.created_at >= :createdAfter', { createdAfter: filter.created_after });
-                }
-                
-                if (filter.created_before) {
-                    queryBuilder.andWhere('material.created_at <= :createdBefore', { createdBefore: filter.created_before });
-                }
-                
+
                 if (filter.min_size) {
                     queryBuilder.andWhere('material.size >= :minSize', { minSize: filter.min_size });
                 }
-                
+
                 if (filter.max_size) {
                     queryBuilder.andWhere('material.size <= :maxSize', { maxSize: filter.max_size });
                 }
-                
-                // 自定义过滤条件
-                if (filter.custom_filter) {
-                    for (const [key, value] of Object.entries(filter.custom_filter)) {
-                        if (value !== undefined && value !== null) {
-                            queryBuilder.andWhere(`material.${key} = :${key}`, { [key]: value });
-                        }
-                    }
+
+                if (filter.created_after) {
+                    queryBuilder.andWhere('material.created_at >= :createdAfter', { createdAfter: filter.created_after });
+                }
+
+                if (filter.created_before) {
+                    queryBuilder.andWhere('material.created_at <= :createdBefore', { createdBefore: filter.created_before });
                 }
             }
-            
-            // 排序
-            queryBuilder.orderBy(`material.${sortBy}`, sortOrder);
-            
-            // 分页
-            const [items, total] = await queryBuilder
-                .skip((page - 1) * limit)
-                .take(limit)
-                .getManyAndCount();
-                
-            return { items, total };
+
+            // 应用排序
+            if (sortBy && sortOrder) {
+                queryBuilder.orderBy(`material.${sortBy}`, sortOrder);
+            }
+
+            // 应用分页
+            const skip = (page - 1) * limit;
+            queryBuilder.skip(skip).take(limit);
+
+            // 执行查询
+            const [materials, total] = await queryBuilder.getManyAndCount();
+
+            // 处理材料数据以确保标签和分类信息正确
+            const processedMaterials = materials.map(material => {
+                // 如果没有关联的分类对象但有分类ID，则设置分类名称为ID
+                if (!material.materialCategory && material.materialCategoryId) {
+                    material.materialCategory = {
+                        id: material.materialCategoryId,
+                        name: material.category || material.materialCategoryId
+                    } as MaterialCategory;
+                }
+
+                return material;
+            });
+
+            return {
+                items: processedMaterials,
+                total,
+                page,
+                limit,
+                total_pages: Math.ceil(total / limit)
+            };
         } catch (error) {
             console.error('获取素材列表失败:', error);
-            throw error instanceof HttpException ? error : new HttpException(500, '获取素材列表失败');
+            throw new HttpException(500, '获取素材列表失败', error);
         }
     }
 
@@ -380,7 +459,8 @@ export class MaterialService {
     public async getMaterialById(id: string): Promise<Material> {
         try {
             const material = await this.materialRepository.findOne({ 
-                where: { id }
+                where: { id },
+                relations: ['materialCategory', 'user', 'materialTags']
             });
             
             if (!material) {
@@ -487,6 +567,7 @@ export class MaterialService {
             // 查找所有以该素材为父素材的记录
             const versions = await this.materialRepository.find({
                 where: { parent_id: id },
+                relations: ['materialCategory', 'user', 'materialTags'],
                 order: { created_at: 'DESC' }
             });
             
@@ -616,11 +697,13 @@ export class MaterialService {
         sortOrder: 'ASC' | 'DESC' = 'DESC'
     ) {
         try {
-            const queryBuilder = this.materialRepository.createQueryBuilder('material');
+            const queryBuilder = this.materialRepository.createQueryBuilder('material')
+                .leftJoinAndSelect('material.materialCategory', 'materialCategory')
+                .leftJoinAndSelect('material.user', 'user');
             
             // 构建查询条件
             if (category) {
-                queryBuilder.andWhere('material.category = :category', { category });
+                queryBuilder.andWhere('materialCategory.name = :category', { category });
             }
             
             if (tags && tags.length > 0) {
@@ -996,6 +1079,32 @@ export class MaterialService {
         } catch (error) {
             console.error('删除标签失败:', error);
             throw error instanceof HttpException ? error : new HttpException(500, '删除标签失败');
+        }
+    }
+
+    /**
+     * 根据ID数组获取分类
+     * @param ids 分类ID数组
+     * @returns 分类数组
+     */
+    public async getCategoriesByIds(ids: string[]): Promise<MaterialCategory[]> {
+        try {
+            if (!ids || ids.length === 0) {
+                return [];
+            }
+
+            // 获取分类仓库
+            const materialCategoryRepository = this.dataSource.getRepository(MaterialCategory);
+
+            // 查询指定ID的分类
+            const categories = await materialCategoryRepository.find({
+                where: { id: In(ids) }
+            });
+
+            return categories;
+        } catch (error) {
+            console.error('根据ID获取分类失败:', error);
+            throw error instanceof HttpException ? error : new HttpException(500, '根据ID获取分类失败');
         }
     }
 } 

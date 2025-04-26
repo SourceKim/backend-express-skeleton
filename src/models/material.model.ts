@@ -216,8 +216,7 @@ export class Material extends BaseEntity {
 
     /**
      * 素材标签
-     * 以JSON数组形式存储
-     * @deprecated 使用materialTags替代
+     * 直接存储标签ID数组
      */
     @Column({ type: 'json', nullable: true })
     @IsOptional()
@@ -225,7 +224,7 @@ export class Material extends BaseEntity {
 
     /**
      * 素材标签关联
-     * 通过多对多关系关联到标签表
+     * @deprecated 使用 tags 字段替代
      */
     @ManyToMany(() => MaterialTag, tag => tag.materials)
     @JoinTable({

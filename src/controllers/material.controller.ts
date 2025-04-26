@@ -16,6 +16,7 @@ import {
 import { HttpException } from '@/exceptions/http.exception';
 import { PaginationQueryDto, ApiResponse, PaginatedResponse } from '@/dtos/common.dto';
 import { ENV } from '@/configs/env.config';
+import { Material, MaterialTag, MaterialCategory } from '@/models/material.model';
 
 /**
  * 素材控制器
@@ -51,11 +52,30 @@ export class MaterialController {
     }
 
     /**
-     * 将材料对象转换为DTO
-     * @param material 材料对象
-     * @returns DTO对象
+     * 将 Material 实体转换为 DTO
+     * @param material Material 实体
+     * @returns MaterialDto
      */
-    private transformToDto(material: any): MaterialDto {
+    private transformToDto(material: Material): MaterialDto {
+        console.log('原始素材数据:', material);
+
+        // 获取分类名称的逻辑
+        let categoryName: string | undefined = undefined;
+        
+        // 1. 首先检查是否有完整的materialCategory对象
+        if (material.materialCategory) {
+            categoryName = material.materialCategory.name;
+        } 
+        // 2. 如果没有，但有materialCategoryId，尝试根据ID获取分类
+        else if (material.materialCategoryId) {
+            // 不能立即查询数据库，先记录ID
+            categoryName = material.materialCategoryId;
+        }
+        // 3. 最后，如果上面都没有，使用旧的category字段（兼容旧数据）
+        else if (material.category) {
+            categoryName = material.category;
+        }
+
         const dto: MaterialDto = {
             id: material.id,
             filename: material.filename,
@@ -64,13 +84,12 @@ export class MaterialController {
             mimetype: material.mimetype,
             size: material.size,
             type: material.type,
-            category: material.category,
+            category: categoryName,
             description: material.description,
             is_public: material.is_public,
             upload_dir: material.upload_dir,
-            tags: material.tags,
             metadata: material.metadata,
-            parent_id: material.parent_id,
+            tags: material.materialTags?.map((tag: MaterialTag) => tag.name) || [],
             created_at: material.created_at,
             updated_at: material.updated_at
         };
@@ -80,7 +99,7 @@ export class MaterialController {
             dto.url = `${ENV.API_URL}/uploads/${material.path}`;
         }
 
-        // 添加用户信息
+        // 如果有用户信息，添加用户信息
         if (material.user) {
             dto.user = {
                 id: material.user.id,
@@ -88,6 +107,7 @@ export class MaterialController {
             };
         }
 
+        console.log('转换后的 DTO:', dto);
         return dto;
     }
 
@@ -207,6 +227,40 @@ export class MaterialController {
                 sort_by,
                 sort_order
             );
+            
+            // 获取所有涉及到的分类ID
+            const categoryIds = items
+                .map(item => {
+                    if (item.materialCategoryId) return item.materialCategoryId;
+                    if (item.category && !item.materialCategory) return item.category;
+                    return null;
+                })
+                .filter(id => id !== null) as string[];
+            
+            // 如果有需要查询的分类ID
+            if (categoryIds.length > 0) {
+                const uniqueCategoryIds = [...new Set(categoryIds)];
+                const categories = await this.materialService.getCategoriesByIds(uniqueCategoryIds);
+                
+                // 创建分类ID到名称的映射
+                const categoryMap = new Map<string, string>();
+                categories.forEach((cat: MaterialCategory) => {
+                    categoryMap.set(cat.id, cat.name);
+                });
+                
+                // 为没有完整分类对象的素材补充分类名称
+                items.forEach(item => {
+                    if (!item.materialCategory && (item.materialCategoryId || item.category)) {
+                        const categoryId = item.materialCategoryId || item.category;
+                        if (categoryId && categoryMap.has(categoryId)) {
+                            item.materialCategory = {
+                                id: categoryId,
+                                name: categoryMap.get(categoryId)!
+                            } as MaterialCategory;
+                        }
+                    }
+                });
+            }
             
             // 返回素材列表
             const response: PaginatedMaterialsResponse = {
