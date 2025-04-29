@@ -250,23 +250,24 @@ export class MaterialService {
 
                 // 处理分类关联
                 if (options?.category) {
+                    console.log('接收到分类ID:', options.category);
                     const categoryRepository = queryRunner.manager.getRepository(MaterialCategory);
+                    
+                    // 直接通过ID查找分类
                     let category = await categoryRepository.findOne({
-                        where: { name: options.category }
+                        where: { id: options.category }
                     });
 
-                    if (!category) {
-                        // 如果分类不存在，创建新分类
-                        category = new MaterialCategory();
-                        category.id = this.generateId();
-                        category.name = options.category;
-                        category = await queryRunner.manager.save(category);
+                    if (category) {
+                        console.log('找到对应分类:', category.name);
+                        material.materialCategory = category;
+                        material.materialCategoryId = category.id;
+                        material.category = category.id;
+                    } else {
+                        console.log('未找到对应分类ID，使用默认分类');
+                        // 可以设置一个默认的"未分类"或其他处理方式
+                        material.category = options.category; // 保留原始值以便调试
                     }
-
-                    material.materialCategory = category;
-                    material.materialCategoryId = category.id;
-                    // 为了兼容旧代码，同时设置category字段
-                    material.category = category.id;
                 }
 
                 // 保存素材基本信息
@@ -274,28 +275,36 @@ export class MaterialService {
 
                 // 处理标签关联
                 if (options?.tags && options.tags.length > 0) {
+                    console.log('接收到标签ID列表:', options.tags);
                     const tagRepository = queryRunner.manager.getRepository(MaterialTag);
                     const materialTags: MaterialTag[] = [];
 
-                    for (const tagName of options.tags) {
-                        let tag = await tagRepository.findOne({
-                            where: { name: tagName }
-                        });
-
-                        if (!tag) {
-                            // 如果标签不存在，创建新标签
-                            tag = new MaterialTag();
-                            tag.id = this.generateId();
-                            tag.name = tagName;
-                            tag = await queryRunner.manager.save(tag);
-                        }
-
+                    // 批量查询所有标签
+                    const foundTags = await tagRepository.find({
+                        where: { id: In(options.tags) }
+                    });
+                    
+                    console.log(`已找到${foundTags.length}个标签，总共${options.tags.length}个ID`);
+                    
+                    // 创建ID到标签对象的映射
+                    const tagMap = new Map<string, MaterialTag>();
+                    foundTags.forEach(tag => {
+                        tagMap.set(tag.id, tag);
                         materialTags.push(tag);
+                    });
+                    
+                    // 记录未找到的标签ID
+                    const notFoundTagIds = options.tags.filter(id => !tagMap.has(id));
+                    if (notFoundTagIds.length > 0) {
+                        console.log('未找到的标签ID:', notFoundTagIds);
                     }
 
                     // 设置素材的标签关联
-                    savedMaterial.materialTags = materialTags;
-                    await queryRunner.manager.save(savedMaterial);
+                    if (materialTags.length > 0) {
+                        savedMaterial.materialTags = materialTags;
+                        await queryRunner.manager.save(savedMaterial);
+                        console.log('已保存标签关联, 数量:', materialTags.length);
+                    }
                 }
 
                 // 提交事务
@@ -343,6 +352,7 @@ export class MaterialService {
         sortOrder: 'ASC' | 'DESC' = 'DESC'
     ) {
         try {
+            // 创建查询构建器，确保加载所有需要的关系
             const queryBuilder = this.materialRepository
                 .createQueryBuilder('material')
                 .leftJoinAndSelect('material.materialCategory', 'materialCategory')
@@ -361,23 +371,35 @@ export class MaterialService {
 
                 if (filter.category) {
                     if (Array.isArray(filter.category)) {
-                        queryBuilder.andWhere('materialCategory.name IN (:...categories)', { categories: filter.category });
+                        queryBuilder.andWhere('materialCategory.id IN (:...categories)', { categories: filter.category });
                     } else {
-                        queryBuilder.andWhere('materialCategory.name = :category', { category: filter.category });
+                        queryBuilder.andWhere('materialCategory.id = :category', { category: filter.category });
                     }
                 }
 
                 if (filter.tags) {
-                    if (Array.isArray(filter.tags)) {
-                        // 使用 JSON_CONTAINS 函数检查 tags 字段是否包含指定的标签
-                        const tagConditions = filter.tags.map((tag, index) => {
-                            const paramName = `tag${index}`;
-                            queryBuilder.setParameter(paramName, tag);
-                            return `JSON_CONTAINS(material.tags, :${paramName})`;
-                        });
-                        queryBuilder.andWhere(`(${tagConditions.join(' OR ')})`);
-                    } else {
-                        queryBuilder.andWhere('JSON_CONTAINS(material.tags, :tag)', { tag: filter.tags });
+                    if (Array.isArray(filter.tags) && filter.tags.length > 0) {
+                        // 使用EXISTS子查询查找与指定标签相关联的素材
+                        queryBuilder.andWhere(qb => {
+                            const subQuery = qb.subQuery()
+                                .select('1')
+                                .from('material_to_tags', 'mtt')
+                                .where('mtt.material_id = material.id')
+                                .andWhere('mtt.tag_id IN (:...tagIds)');
+                            return 'EXISTS ' + subQuery.getQuery();
+                        })
+                        .setParameter('tagIds', filter.tags);
+                    } else if (!Array.isArray(filter.tags)) {
+                        // 单个标签ID
+                        queryBuilder.andWhere(qb => {
+                            const subQuery = qb.subQuery()
+                                .select('1')
+                                .from('material_to_tags', 'mtt')
+                                .where('mtt.material_id = material.id')
+                                .andWhere('mtt.tag_id = :tagId');
+                            return 'EXISTS ' + subQuery.getQuery();
+                        })
+                        .setParameter('tagId', filter.tags);
                     }
                 }
 
@@ -422,24 +444,13 @@ export class MaterialService {
             const skip = (page - 1) * limit;
             queryBuilder.skip(skip).take(limit);
 
-            // 执行查询
-            const [materials, total] = await queryBuilder.getManyAndCount();
+            console.log('素材查询SQL:', queryBuilder.getSql());
 
-            // 处理材料数据以确保标签和分类信息正确
-            const processedMaterials = materials.map(material => {
-                // 如果没有关联的分类对象但有分类ID，则设置分类名称为ID
-                if (!material.materialCategory && material.materialCategoryId) {
-                    material.materialCategory = {
-                        id: material.materialCategoryId,
-                        name: material.category || material.materialCategoryId
-                    } as MaterialCategory;
-                }
-
-                return material;
-            });
+            // 执行查询，获取结果
+            const [items, total] = await queryBuilder.getManyAndCount();
 
             return {
-                items: processedMaterials,
+                items,
                 total,
                 page,
                 limit,

@@ -59,22 +59,11 @@ export class MaterialController {
     private transformToDto(material: Material): MaterialDto {
         console.log('原始素材数据:', material);
 
-        // 获取分类名称的逻辑
-        let categoryName: string | undefined = undefined;
-        
-        // 1. 首先检查是否有完整的materialCategory对象
-        if (material.materialCategory) {
-            categoryName = material.materialCategory.name;
-        } 
-        // 2. 如果没有，但有materialCategoryId，尝试根据ID获取分类
-        else if (material.materialCategoryId) {
-            // 不能立即查询数据库，先记录ID
-            categoryName = material.materialCategoryId;
-        }
-        // 3. 最后，如果上面都没有，使用旧的category字段（兼容旧数据）
-        else if (material.category) {
-            categoryName = material.category;
-        }
+        // 从materialCategory中获取分类名称
+        const categoryName = material.materialCategory ? material.materialCategory.name : undefined;
+
+        // 从materialTags中获取标签名称列表
+        const tagNames = material.materialTags ? material.materialTags.map(tag => tag.name) : [];
 
         const dto: MaterialDto = {
             id: material.id,
@@ -89,7 +78,7 @@ export class MaterialController {
             is_public: material.is_public,
             upload_dir: material.upload_dir,
             metadata: material.metadata,
-            tags: material.materialTags?.map((tag: MaterialTag) => tag.name) || [],
+            tags: tagNames,
             created_at: material.created_at,
             updated_at: material.updated_at
         };
@@ -227,40 +216,6 @@ export class MaterialController {
                 sort_by,
                 sort_order
             );
-            
-            // 获取所有涉及到的分类ID
-            const categoryIds = items
-                .map(item => {
-                    if (item.materialCategoryId) return item.materialCategoryId;
-                    if (item.category && !item.materialCategory) return item.category;
-                    return null;
-                })
-                .filter(id => id !== null) as string[];
-            
-            // 如果有需要查询的分类ID
-            if (categoryIds.length > 0) {
-                const uniqueCategoryIds = [...new Set(categoryIds)];
-                const categories = await this.materialService.getCategoriesByIds(uniqueCategoryIds);
-                
-                // 创建分类ID到名称的映射
-                const categoryMap = new Map<string, string>();
-                categories.forEach((cat: MaterialCategory) => {
-                    categoryMap.set(cat.id, cat.name);
-                });
-                
-                // 为没有完整分类对象的素材补充分类名称
-                items.forEach(item => {
-                    if (!item.materialCategory && (item.materialCategoryId || item.category)) {
-                        const categoryId = item.materialCategoryId || item.category;
-                        if (categoryId && categoryMap.has(categoryId)) {
-                            item.materialCategory = {
-                                id: categoryId,
-                                name: categoryMap.get(categoryId)!
-                            } as MaterialCategory;
-                        }
-                    }
-                });
-            }
             
             // 返回素材列表
             const response: PaginatedMaterialsResponse = {

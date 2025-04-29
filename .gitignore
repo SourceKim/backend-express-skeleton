@@ -33,3 +33,6 @@ Thumbs.db
 
 # backup
 backup/
+
+# uploads
+uploads/
